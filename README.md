@@ -29,29 +29,27 @@ An interactive full-level map for **Order of the Sinking Star**: 920 level posit
 git clone <this-repo>
 cd order-of-the-sinking-star
 
-# 补齐图片资源（必做，见下方说明）
-python tools/fetch-assets.py
-
-# 用浏览器打开
-# 直接双击 index.html 即可
+# 直接双击 index.html 即可，无需构建
 ```
 
-> ⚠️ 仓库**不包含**图片资源。不跑 `fetch-assets.py` 的话，地图和棋盘会是空白。
+图片资源已包含在仓库里，克隆下来就能完整运行。
 
 ---
 
-## 为什么仓库里没有图片 / Why no images
+## 图片资源 / Assets
 
-`assets/levels/`（920 张关卡棋盘截图）和 `assets/maps/`（三层大地图底图）都是**游戏画面，版权归 Thekla, Inc.**，不适合放进开源仓库。
+`assets/levels/`（920 张关卡棋盘截图）和 `assets/maps/`（三层大地图底图）都是**游戏画面，版权归 Thekla, Inc.**，仅为让在线演示完整而随仓库提供。
 
-它们都能从上游公开地址拉取：
+如果图片缺失、损坏，或你想重新获取：
 
 ```bash
 python tools/fetch-assets.py          # 补齐缺失
 python tools/fetch-assets.py --force  # 全部重下
 ```
 
-脚本会自动把 2048×1152 的原图缩放成页面用的 560×315 缩略图（约 28KB/张）。
+脚本从上游 [joric/ootss_tileset](https://github.com/joric/ootss_tileset) 拉取，并自动把 2048×1152 的原图缩放成页面用的 560×315 缩略图（约 28KB/张）。
+
+若权利人认为不妥，提 issue 即可移除。
 
 ---
 
@@ -93,9 +91,9 @@ data/
   walkthrough.js        外部攻略锚点（生成物）
   i18n.js               英文词典 + 区域英文名（生成物）
 assets/
-  maps/                 三层底图（不进仓库）
-  levels/               920 张关卡棋盘（不进仓库）
-local/                  游戏本地化文本（不进仓库）
+  maps/                 三层底图
+  levels/               920 张关卡棋盘
+local/                  游戏本地化文本（不进仓库，构建时可选）
 tools/
   fetch-assets.py       拉图片资源
   fetch-data.py         拉上游原始数据
