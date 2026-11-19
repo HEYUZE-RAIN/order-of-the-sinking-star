@@ -10,21 +10,49 @@ GitHub Pages 够用的情况下这是**可选**的第二份托管。用途：
 
 ---
 
+## 已上线地址
+
+**https://order-of-the-sinking-star-389.pages.dev**
+
+生产分支 `main`，当前部署 ID `89c4722b`。
+
+---
+
 ## 一次性准备
 
 ### 1. 注册 Cloudflare
 
 https://dash.cloudflare.com/sign-up
 
-只需要邮箱 + 密码，不用绑卡、不用买域名。
+邮箱 + 密码即可，不绑卡。
 
-### 2. 登录 CLI
+### 2. 创建 API Token
 
-在项目根目录：
+https://dash.cloudflare.com/profile/api-tokens → **Create Custom Token**
+
+| Type | 权限 | 级别 |
+|---|---|---|
+| Account | Cloudflare Pages | Edit |
+| Account | Cloudflare Pages | Read |
+
+Account Resources 选自己的账号。
+
+### 3. 拿到 Account ID
+
+后台首页右栏，或 https://dash.cloudflare.com/ 的 URL 里（32 位十六进制）。
+
+### 4. 设环境变量
 
 ```bash
-npm install          # 装 wrangler
-npx wrangler login   # 会打开浏览器，点 Allow 授权
+export CLOUDFLARE_API_TOKEN="你的 token"
+export CLOUDFLARE_ACCOUNT_ID="你的 account id"
+```
+
+Windows CMD：
+
+```cmd
+set CLOUDFLARE_API_TOKEN=你的token
+set CLOUDFLARE_ACCOUNT_ID=你的accountid
 ```
 
 ---
@@ -35,75 +63,49 @@ npx wrangler login   # 会打开浏览器，点 Allow 授权
 npm run deploy
 ```
 
-这条命令做两件事：
+做两件事：
 
-1. `tools/pack-dist.js` 打包出 `dist/`（只含 `index.html` + `data/` + `assets/`，约 40MB，不含 git 历史和工具脚本）
-2. `wrangler` 把 `dist/` 直传上去
+1. `tools/pack-dist.js` 打包 → `dist/`（929 文件 / 40MB，只含站点文件）
+2. `tools/deploy-cf.js` 直连 Cloudflare API 上传
 
-首次会问你项目名，填：
-
-```
-order-of-the-sinking-star
-```
-
-部署完成会打印一个地址，形如：
-
-```
-https://order-of-the-sinking-star.pages.dev
-```
-
-**这个地址就是永久链接**，以后每次 `npm run deploy` 会更新它。
+流程是：拿上传 JWT → `check-missing` 去重 → 分批上传 → `upsert-hashes` → 创建 deployment。
+所以**再次部署只会传改动过的文件**，通常几秒钟完成。
 
 ---
 
-## 预览部署（不覆盖正式站）
+## 为什么不用 wrangler
 
-```bash
-npm run deploy:preview
-```
+一开始用 `wrangler pages deploy`，遇到三个坑：
 
-会得到一个带随机前缀的预览地址。适合先看效果再决定要不要上线。
+| 问题 | 表现 | 解决 |
+|---|---|---|
+| `account_id` 不支持 | Pages 配置校验报错 | 改走环境变量 |
+| 单批 8MB 上传中断 | `fetch failed`，无有效信息 | 降到 2MB 分批 |
+| manifest 传法错误 | `8000096 manifest field expected` | **必须是普通文本字段**，不能当文件传 |
 
----
+最后一条最坑：`formData.append("manifest", JSON.stringify(manifest))`，
+用 `Blob` 或 curl 的 `@file` 都报错，只有纯字符串才行。
 
-## 为什么是直传而不是关联 Git 仓库
-
-Cloudflare 也能像 Vercel 那样「连你的 GitHub 仓库，push 自动部署」。这里没用那种方式，原因：
-
-- 需要对 Cloudflare 授权读取你的 GitHub 私有数据
-- 国内网络下 Cloudflare 拉取 GitHub 可能失败
-- 直传更可控：**你什么时候推、推什么内容，完全由这条命令决定**
-
-代价是每次改完要手动跑一次 `npm run deploy`。如果想自动化，可以在 GitHub 仓库加 Actions（需要把 Cloudflare 的 API Token 存到仓库 Secrets 里）。
+另外本机网络对 `api.cloudflare.com` 是**间歇性阻断**（TLS 握手被掐），
+`deploy-cf.js` 因此内置了指数退避重试。
 
 ---
 
 ## 注意事项
 
-**wrangler.toml 里没有账号 ID**
+**wrangler 仍保留在 devDependencies**
 
-`account_id` 留空。执行 `wrangler login` 后会自动使用当前账号，多人协作时才有必要写死。
+`npm run login` 还能用来自查账号状态，但部署不走它。
+
+**缓存**
+
+`_headers` 给 `/assets/*` 设了 7 天缓存。换图但文件名不变时，访客可能看到旧图 ——
+去 Cloudflare 后台 Purge Cache，或给文件名加版本号。
 
 **图片必须先在本地**
 
-`assets/` 里的图不在 git 里（`assets/levels` 和 `assets/maps` 虽已入库，但如果你 clone 的是精简分支就要跑 `python tools/fetch-assets.py`）。
-`pack-dist.js` 会检查：少于 920 张关卡图或缺底图时会警告。
+`pack-dist.js` 会检查：少于 920 张关卡图或缺底图会警告。
 
-**缓存策略**
+**换到其他托管**
 
-`wrangler.toml` 里给 `/assets/*` 设置了 7 天强缓存。如果你替换了图片但文件名没变，访客可能看到的还是旧图——改图后建议给文件名加版本后缀，或者在 Cloudflare 后台 Purge Cache。
-
----
-
-## 换到其他托管
-
-`dist/` 是纯静态目录，任何静态托管都能用：
-
-| 平台 | 免费额度 | 特点 |
-|---|---|---|
-| Cloudflare Pages | 无限带宽 | 国内相对快 |
-| Netlify | 100GB/月 | 拖拽部署最省事 |
-| Vercel | 100GB/月 | 与 Next.js 生态好 |
-| 自建 nginx | — | 完全可控 |
-
-换平台不需要改 `index.html` 任何一行。
+`dist/` 是纯静态目录。GitHub Pages 与 Cloudflare Pages 两份已同时在线，互为备份。

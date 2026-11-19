@@ -3,6 +3,9 @@
 # 部署方式：wrangler 直传静态文件（不是关联 Git 仓库，因此不依赖 GitHub 能否访问）
 # 站点根目录就是仓库根目录，index.html 在根下，资源全用相对路径。
 #
+# 账号与凭据通过环境变量传入（Pages 配置不支持 account_id）：
+#   CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID
+#
 # 命令：
 #   npm run deploy          首次部署（会引导登录）
 #   npm run deploy:preview  部署到预览环境，不覆盖正式站
