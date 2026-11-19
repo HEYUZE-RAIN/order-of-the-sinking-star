@@ -6,6 +6,8 @@ An interactive full-level map for **Order of the Sinking Star**: 920 level posit
 
 > 非官方玩家工具 / Unofficial fan project. 与 Thekla, Inc. 无隶属关系。
 
+**在线版 / Live demo**：https://heyuze-rain.github.io/order-of-the-sinking-star/
+
 ---
 
 ## 功能 / Features
