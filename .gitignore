@@ -36,7 +36,12 @@ venv/
 
 # Node
 node_modules/
+package-lock.json
 npm-debug.log*
+.wrangler/
+
+# Cloudflare Pages 部署产物（tools/pack-dist.js 生成）
+dist/
 
 # 临时文件
 *.tmp

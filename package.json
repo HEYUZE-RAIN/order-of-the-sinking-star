@@ -1,0 +1,15 @@
+{
+  "name": "order-of-the-sinking-star-map",
+  "version": "0.11.5",
+  "private": true,
+  "description": "Order of the Sinking Star 全关卡交互地图",
+  "scripts": {
+    "pack": "node tools/pack-dist.js",
+    "deploy": "node tools/pack-dist.js && wrangler pages deploy dist --project-name order-of-the-sinking-star --commit-dirty=true",
+    "deploy:preview": "node tools/pack-dist.js && wrangler pages deploy dist --project-name order-of-the-sinking-star --branch preview --commit-dirty=true",
+    "login": "wrangler login"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

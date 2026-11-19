@@ -1,0 +1,15 @@
+# Cloudflare Pages 部署配置
+#
+# 部署方式：wrangler 直传静态文件（不是关联 Git 仓库，因此不依赖 GitHub 能否访问）
+# 站点根目录就是仓库根目录，index.html 在根下，资源全用相对路径。
+#
+# 命令：
+#   npm run deploy          首次部署（会引导登录）
+#   npm run deploy:preview  部署到预览环境，不覆盖正式站
+
+name = "order-of-the-sinking-star"
+compatibility_date = "2026-11-19"
+pages_build_output_dir = "./dist"
+
+# dist/ 由 tools/pack-dist.js 生成：只含 index.html + data/ + assets/，
+# 不含 .git、tools、README，避免传几十 MB 无用内容。
