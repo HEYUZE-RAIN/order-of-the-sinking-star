@@ -5,9 +5,9 @@
   "description": "Order of the Sinking Star 全关卡交互地图",
   "scripts": {
     "pack": "node tools/pack-dist.js",
-    "deploy": "node tools/pack-dist.js && node tools/deploy-cf.js",
-    "deploy:preview": "node tools/pack-dist.js && node tools/deploy-cf.js --branch preview",
-    "login": "wrangler login"
+    "login": "wrangler login",
+    "deploy:cf": "node tools/pack-dist.js && node tools/deploy-cf.js",
+    "deploy:cf:preview": "node tools/pack-dist.js && node tools/deploy-cf.js --branch preview"
   },
   "devDependencies": {
     "wrangler": "^4.0.0"
