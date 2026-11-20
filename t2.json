@@ -1,0 +1,886 @@
+{
+  "sha": "c4d2a30b03a0d43f7d66b40497d1aff90a40383c",
+  "url": "https://api.github.com/repos/joric/ootss/git/trees/c4d2a30b03a0d43f7d66b40497d1aff90a40383c",
+  "tree": [
+    {
+      "path": ".nojekyll",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "LICENSE",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fdddb29aa445bf3d6a5d843d6dd77e10a9f99657",
+      "size": 1211,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/fdddb29aa445bf3d6a5d843d6dd77e10a9f99657"
+    },
+    {
+      "path": "README.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "88750d8580b0f00e62774866e093229e7375c38c",
+      "size": 140,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/88750d8580b0f00e62774866e093229e7375c38c"
+    },
+    {
+      "path": "data",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "95ed8b15277d268739736638876611b69a5e8b46",
+      "url": "https://api.github.com/repos/joric/ootss/git/trees/95ed8b15277d268739736638876611b69a5e8b46"
+    },
+    {
+      "path": "data/Localization",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "1a954c5aca8a8a7177ead13a2583bf23fe635e31",
+      "url": "https://api.github.com/repos/joric/ootss/git/trees/1a954c5aca8a8a7177ead13a2583bf23fe635e31"
+    },
+    {
+      "path": "data/Localization/en.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7c4d7309575a49cd8cf3ee69eb1f2b65bdb78c4e",
+      "size": 104424,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/7c4d7309575a49cd8cf3ee69eb1f2b65bdb78c4e"
+    },
+    {
+      "path": "data/Subtitles",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "03b055c746342691b135e58cdc16887f973ecd40",
+      "url": "https://api.github.com/repos/joric/ootss/git/trees/03b055c746342691b135e58cdc16887f973ecd40"
+    },
+    {
+      "path": "data/Subtitles/en.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "83c081ae7fec05d935f8d6a0b0d09191d9705975",
+      "size": 459734,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/83c081ae7fec05d935f8d6a0b0d09191d9705975"
+    },
+    {
+      "path": "data/image_index.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6e64a00605ed9079bae332c2625344ab7d757352",
+      "size": 578735,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/6e64a00605ed9079bae332c2625344ab7d757352"
+    },
+    {
+      "path": "data/images.txt",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1c16c48e898506bd4cece8c418765f03e9c5e8c6",
+      "size": 20720,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/1c16c48e898506bd4cece8c418765f03e9c5e8c6"
+    },
+    {
+      "path": "data/level_audio.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "241a8533fcc8ab50953aa70765bd67d29a9d5009",
+      "size": 28598,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/241a8533fcc8ab50953aa70765bd67d29a9d5009"
+    },
+    {
+      "path": "data/markers.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "33d8a3d2279b8813ebe764c2d74112afb01e0ca9",
+      "size": 4432248,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/33d8a3d2279b8813ebe764c2d74112afb01e0ca9"
+    },
+    {
+      "path": "data/markers_demo.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d640a1dc6be2197e5f7d03056ba100f453bf14a3",
+      "size": 28855,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/d640a1dc6be2197e5f7d03056ba100f453bf14a3"
+    },
+    {
+      "path": "data/order.txt",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "05511658c2fce37149378f9a1715baf9fc8720cf",
+      "size": 1513,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/05511658c2fce37149378f9a1715baf9fc8720cf"
+    },
+    {
+      "path": "data/regions.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "06d14f6be4d638a4f5006a4724ea9f0789f4010d",
+      "size": 2063,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/06d14f6be4d638a4f5006a4724ea9f0789f4010d"
+    },
+    {
+      "path": "data/solutions.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "25d772c370f51d44632c2e2c4cf337e1b6ea9ab1",
+      "size": 188755,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/25d772c370f51d44632c2e2c4cf337e1b6ea9ab1"
+    },
+    {
+      "path": "data/solutions.txt",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "188fd83173d97107e285fa96047fd53901b4092c",
+      "size": 8314,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/188fd83173d97107e285fa96047fd53901b4092c"
+    },
+    {
+      "path": "data/wt.txt",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "248671ceef4a599bbf564ec2ddb05318c9ab6750",
+      "size": 50117,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/248671ceef4a599bbf564ec2ddb05318c9ab6750"
+    },
+    {
+      "path": "data/youtube.txt",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "32d8ec4c046f5b8bc428a64f8bc6b6ee8ac1b3fb",
+      "size": 2026,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/32d8ec4c046f5b8bc428a64f8bc6b6ee8ac1b3fb"
+    },
+    {
+      "path": "index.html",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "01e68722b01e6225227a5e6c5cd6cfe884afe3a7",
+      "size": 69753,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/01e68722b01e6225227a5e6c5cd6cfe884afe3a7"
+    },
+    {
+      "path": "js",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "5b821fcf1237cacfd01190363d2b36474a6d3dac",
+      "url": "https://api.github.com/repos/joric/ootss/git/trees/5b821fcf1237cacfd01190363d2b36474a6d3dac"
+    },
+    {
+      "path": "js/js",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "443378262ebeff5f54af33954d538367533d2ddc",
+      "url": "https://api.github.com/repos/joric/ootss/git/trees/443378262ebeff5f54af33954d538367533d2ddc"
+    },
+    {
+      "path": "js/js/vendor",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "4359f8475599b934afbe7007a13d97208cf00eca",
+      "url": "https://api.github.com/repos/joric/ootss/git/trees/4359f8475599b934afbe7007a13d97208cf00eca"
+    },
+    {
+      "path": "js/js/vendor/three.core.js",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c3c52b5cf205fcd20e917b1cd8a723662d9fa31b",
+      "size": 1421721,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/c3c52b5cf205fcd20e917b1cd8a723662d9fa31b"
+    },
+    {
+      "path": "js/js/vendor/three.module.js",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2b7d09312783cf66a56305a4dd48842b17ad8264",
+      "size": 638941,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/2b7d09312783cf66a56305a4dd48842b17ad8264"
+    },
+    {
+      "path": "js/lib",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "93fc62c853e02c0a9fd38360ad0a93ed01a3a409",
+      "url": "https://api.github.com/repos/joric/ootss/git/trees/93fc62c853e02c0a9fd38360ad0a93ed01a3a409"
+    },
+    {
+      "path": "js/lib/font-awesome",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "6e9569256f2dc708e7341860994c8e0e46261c8d",
+      "url": "https://api.github.com/repos/joric/ootss/git/trees/6e9569256f2dc708e7341860994c8e0e46261c8d"
+    },
+    {
+      "path": "js/lib/font-awesome/css",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "5318c9c30fb51094d63848b8ca8cc878d31cc61c",
+      "url": "https://api.github.com/repos/joric/ootss/git/trees/5318c9c30fb51094d63848b8ca8cc878d31cc61c"
+    },
+    {
+      "path": "js/lib/font-awesome/css/all.min.css",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "659189474563783f40ceea4612c9ac261254c8ce",
+      "size": 74185,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/659189474563783f40ceea4612c9ac261254c8ce"
+    },
+    {
+      "path": "js/lib/font-awesome/webfonts",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "cd06ec46d5d35ec1c373eddf032d20d5e444f7fe",
+      "url": "https://api.github.com/repos/joric/ootss/git/trees/cd06ec46d5d35ec1c373eddf032d20d5e444f7fe"
+    },
+    {
+      "path": "js/lib/font-awesome/webfonts/fa-regular-400.woff2",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "644a834da1fe1b6fd312dd0fc455e61e85b82aeb",
+      "size": 18892,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/644a834da1fe1b6fd312dd0fc455e61e85b82aeb"
+    },
+    {
+      "path": "js/lib/font-awesome/webfonts/fa-solid-900.woff2",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6b79def012c8190b8a151ec3d5321022f38a8790",
+      "size": 113108,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/6b79def012c8190b8a151ec3d5321022f38a8790"
+    },
+    {
+      "path": "js/lib/imageSearch",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "cbfeb27077b86e60651f681f04a94f0e08e34a8c",
+      "url": "https://api.github.com/repos/joric/ootss/git/trees/cbfeb27077b86e60651f681f04a94f0e08e34a8c"
+    },
+    {
+      "path": "js/lib/imageSearch/build-index.cjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ec301e7dd86af17456e261a1b1da4fecaf131030",
+      "size": 8894,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/ec301e7dd86af17456e261a1b1da4fecaf131030"
+    },
+    {
+      "path": "js/lib/imageSearch/image_search.js",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "dd3f68bc1b5f444d36fbd0da350f61adef4802fd",
+      "size": 9061,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/dd3f68bc1b5f444d36fbd0da350f61adef4802fd"
+    },
+    {
+      "path": "js/lib/imageSearch/index.html",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4af6e8b7994cf5c175cfaf8679f62c69a8b2f7eb",
+      "size": 10065,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/4af6e8b7994cf5c175cfaf8679f62c69a8b2f7eb"
+    },
+    {
+      "path": "js/lib/images",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "c5363f98fb7e8e325ebb8876dbd5aabedfe1804e",
+      "url": "https://api.github.com/repos/joric/ootss/git/trees/c5363f98fb7e8e325ebb8876dbd5aabedfe1804e"
+    },
+    {
+      "path": "js/lib/images/layers-2x.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "200c333dca9652ac4cba004d609e5af4eee168c1",
+      "size": 1259,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/200c333dca9652ac4cba004d609e5af4eee168c1"
+    },
+    {
+      "path": "js/lib/images/layers.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1a72e5784b2b456eac5d7670738db80697af3377",
+      "size": 696,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/1a72e5784b2b456eac5d7670738db80697af3377"
+    },
+    {
+      "path": "js/lib/images/loader.gif",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d3ef195d52dad8449e21eb58817dcb3ae8a9ba73",
+      "size": 1849,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/d3ef195d52dad8449e21eb58817dcb3ae8a9ba73"
+    },
+    {
+      "path": "js/lib/images/marker-icon-2x.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "88f9e501888c9c6cb29ad340d9a888627dd1b6d8",
+      "size": 2464,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/88f9e501888c9c6cb29ad340d9a888627dd1b6d8"
+    },
+    {
+      "path": "js/lib/images/marker-icon.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "950edf24677ded147df13b26f91baa2b0fa70513",
+      "size": 1466,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/950edf24677ded147df13b26f91baa2b0fa70513"
+    },
+    {
+      "path": "js/lib/images/marker-shadow.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9fd2979532a19a15b824ce763c76e04a8dafadfb",
+      "size": 618,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/9fd2979532a19a15b824ce763c76e04a8dafadfb"
+    },
+    {
+      "path": "js/lib/images/search-icon.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "231df745b290ab38816a19972be5d3cb0fe6bbca",
+      "size": 3838,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/231df745b290ab38816a19972be5d3cb0fe6bbca"
+    },
+    {
+      "path": "js/lib/leaflet-canvas",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "cd4b129019cf59916040b22160285ea8bbee9ae7",
+      "url": "https://api.github.com/repos/joric/ootss/git/trees/cd4b129019cf59916040b22160285ea8bbee9ae7"
+    },
+    {
+      "path": "js/lib/leaflet-canvas/L.TileLayer.Canvas.min.js",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f3700502507aea060a7235cbcb25e59054d7f42a",
+      "size": 982,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/f3700502507aea060a7235cbcb25e59054d7f42a"
+    },
+    {
+      "path": "js/lib/leaflet-edgebuffer",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "88caacf94d2101cd7af6ca1504de282f7c827a57",
+      "url": "https://api.github.com/repos/joric/ootss/git/trees/88caacf94d2101cd7af6ca1504de282f7c827a57"
+    },
+    {
+      "path": "js/lib/leaflet-edgebuffer/leaflet.edgebuffer.min.js",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a93e1779b73989c617a96ce3ac258aea703f4999",
+      "size": 1025,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/a93e1779b73989c617a96ce3ac258aea703f4999"
+    },
+    {
+      "path": "js/lib/leaflet-minimap",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "8e2ea3984538f7b209c20239e0c56ab9366ae708",
+      "url": "https://api.github.com/repos/joric/ootss/git/trees/8e2ea3984538f7b209c20239e0c56ab9366ae708"
+    },
+    {
+      "path": "js/lib/leaflet-minimap/Control.MiniMap.min.css",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "28869436e07afb943c4ab90402aa54c9f52699fd",
+      "size": 1665,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/28869436e07afb943c4ab90402aa54c9f52699fd"
+    },
+    {
+      "path": "js/lib/leaflet-minimap/Control.MiniMap.min.js",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9158b1f45879cf3858ea43c8bb78029c873d150a",
+      "size": 8565,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/9158b1f45879cf3858ea43c8bb78029c873d150a"
+    },
+    {
+      "path": "js/lib/leaflet-minimap/images",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "1effb8720336b7b2e7315e3a5e9c47a08d7c8cb6",
+      "url": "https://api.github.com/repos/joric/ootss/git/trees/1effb8720336b7b2e7315e3a5e9c47a08d7c8cb6"
+    },
+    {
+      "path": "js/lib/leaflet-minimap/images/toggle.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b29327099d81de3ca9d6f5dff0ac6e3cb4a224a8",
+      "size": 1765,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/b29327099d81de3ca9d6f5dff0ac6e3cb4a224a8"
+    },
+    {
+      "path": "js/lib/leaflet-mouseposition",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "faa75e6916b7768f16a2c868431216222a68f491",
+      "url": "https://api.github.com/repos/joric/ootss/git/trees/faa75e6916b7768f16a2c868431216222a68f491"
+    },
+    {
+      "path": "js/lib/leaflet-mouseposition/L.Control.MousePosition.css",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "71e09a23a281444e1015b40adb2496214cf1d6d7",
+      "size": 239,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/71e09a23a281444e1015b40adb2496214cf1d6d7"
+    },
+    {
+      "path": "js/lib/leaflet-mouseposition/L.Control.MousePosition.js",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "656bc78ba651f93e1b8540fa41541e76223a8db3",
+      "size": 1526,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/656bc78ba651f93e1b8540fa41541e76223a8db3"
+    },
+    {
+      "path": "js/lib/leaflet-search",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "5194a084943ff69ddfaf94a11b7406ae2cf11cf1",
+      "url": "https://api.github.com/repos/joric/ootss/git/trees/5194a084943ff69ddfaf94a11b7406ae2cf11cf1"
+    },
+    {
+      "path": "js/lib/leaflet-search/leaflet-search.src.min.css",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3bf54a5514b7d4e0b8c4490e1f69ac61db88c357",
+      "size": 2674,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/3bf54a5514b7d4e0b8c4490e1f69ac61db88c357"
+    },
+    {
+      "path": "js/lib/leaflet-search/leaflet-search.src.min.js",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2d7ab1852e21f1ba05d1b37cca1694b729915e9d",
+      "size": 16499,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/2d7ab1852e21f1ba05d1b37cca1694b729915e9d"
+    },
+    {
+      "path": "js/lib/leaflet-toolbar",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "6ac57e20a9fa016fefe3febda7f178091f7d8465",
+      "url": "https://api.github.com/repos/joric/ootss/git/trees/6ac57e20a9fa016fefe3febda7f178091f7d8465"
+    },
+    {
+      "path": "js/lib/leaflet-toolbar/Leaflet.Toolbar.min.css",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "767cb2bffaedc22edd2ef0ce13a71fc353358321",
+      "size": 2560,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/767cb2bffaedc22edd2ef0ce13a71fc353358321"
+    },
+    {
+      "path": "js/lib/leaflet-toolbar/Leaflet.Toolbar.min.js",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bc2fef8da93cfc96edc11cd204d1516b2c80110e",
+      "size": 5561,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/bc2fef8da93cfc96edc11cd204d1516b2c80110e"
+    },
+    {
+      "path": "js/lib/leaflet",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "15ce260e4f14f6ba4cf32e02b4644f9c8f95217c",
+      "url": "https://api.github.com/repos/joric/ootss/git/trees/15ce260e4f14f6ba4cf32e02b4644f9c8f95217c"
+    },
+    {
+      "path": "js/lib/leaflet/images",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "c5363f98fb7e8e325ebb8876dbd5aabedfe1804e",
+      "url": "https://api.github.com/repos/joric/ootss/git/trees/c5363f98fb7e8e325ebb8876dbd5aabedfe1804e"
+    },
+    {
+      "path": "js/lib/leaflet/images/layers-2x.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "200c333dca9652ac4cba004d609e5af4eee168c1",
+      "size": 1259,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/200c333dca9652ac4cba004d609e5af4eee168c1"
+    },
+    {
+      "path": "js/lib/leaflet/images/layers.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1a72e5784b2b456eac5d7670738db80697af3377",
+      "size": 696,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/1a72e5784b2b456eac5d7670738db80697af3377"
+    },
+    {
+      "path": "js/lib/leaflet/images/loader.gif",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d3ef195d52dad8449e21eb58817dcb3ae8a9ba73",
+      "size": 1849,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/d3ef195d52dad8449e21eb58817dcb3ae8a9ba73"
+    },
+    {
+      "path": "js/lib/leaflet/images/marker-icon-2x.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "88f9e501888c9c6cb29ad340d9a888627dd1b6d8",
+      "size": 2464,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/88f9e501888c9c6cb29ad340d9a888627dd1b6d8"
+    },
+    {
+      "path": "js/lib/leaflet/images/marker-icon.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "950edf24677ded147df13b26f91baa2b0fa70513",
+      "size": 1466,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/950edf24677ded147df13b26f91baa2b0fa70513"
+    },
+    {
+      "path": "js/lib/leaflet/images/marker-shadow.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9fd2979532a19a15b824ce763c76e04a8dafadfb",
+      "size": 618,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/9fd2979532a19a15b824ce763c76e04a8dafadfb"
+    },
+    {
+      "path": "js/lib/leaflet/images/search-icon.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "231df745b290ab38816a19972be5d3cb0fe6bbca",
+      "size": 3838,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/231df745b290ab38816a19972be5d3cb0fe6bbca"
+    },
+    {
+      "path": "js/lib/leaflet/leaflet.min.css",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e7adb30a9ff904a1a708c738409bd5dffedc2b91",
+      "size": 10756,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/e7adb30a9ff904a1a708c738409bd5dffedc2b91"
+    },
+    {
+      "path": "js/lib/leaflet/leaflet.min.js",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8f2e21d985ff28dea905126ddef084105ea39f00",
+      "size": 143470,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/8f2e21d985ff28dea905126ddef084105ea39f00"
+    },
+    {
+      "path": "js/lib/puzzlescript",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "9421830713a74a4fea62c7c26cf14a323b5bfcf7",
+      "url": "https://api.github.com/repos/joric/ootss/git/trees/9421830713a74a4fea62c7c26cf14a323b5bfcf7"
+    },
+    {
+      "path": "js/lib/puzzlescript/puzzlescript.min.js",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "059e83298dccfc84ef813bc9c7908260c7112699",
+      "size": 261369,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/059e83298dccfc84ef813bc9c7908260c7112699"
+    },
+    {
+      "path": "js/lib/swiper",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "5fc326a1dfa0997f4c1ca992eaae55b2302d2d1b",
+      "url": "https://api.github.com/repos/joric/ootss/git/trees/5fc326a1dfa0997f4c1ca992eaae55b2302d2d1b"
+    },
+    {
+      "path": "js/lib/swiper/swiper-bundle.min.css",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "af74a6825913717ca4e711deff099cd4d529fea5",
+      "size": 18454,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/af74a6825913717ca4e711deff099cd4d529fea5"
+    },
+    {
+      "path": "js/lib/swiper/swiper-bundle.min.js",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2a57d2a8a5e9621324a594ab424fd113c2efb49d",
+      "size": 154597,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/2a57d2a8a5e9621324a594ab424fd113c2efb49d"
+    },
+    {
+      "path": "js/scripts_play_compiled.js",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "37685fe5c79a617e474c625c0e371cc06c874926",
+      "size": 371125,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/37685fe5c79a617e474c625c0e371cc06c874926"
+    },
+    {
+      "path": "js/solution_player.js",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a0cadad0935149e940b97768735cf8d03bfb0926",
+      "size": 19581,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/a0cadad0935149e940b97768735cf8d03bfb0926"
+    },
+    {
+      "path": "play.html",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "88224770bc949209a0bdc456bb2c88a084199c86",
+      "size": 12657,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/88224770bc949209a0bdc456bb2c88a084199c86"
+    },
+    {
+      "path": "scripts",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "26ae22c294dc7f67ea12ef0d4bd861b388020e1b",
+      "url": "https://api.github.com/repos/joric/ootss/git/trees/26ae22c294dc7f67ea12ef0d4bd861b388020e1b"
+    },
+    {
+      "path": "scripts/.env_example",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0b51adde7d5cfc59738a4a803062e7356e7355be",
+      "size": 85,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/0b51adde7d5cfc59738a4a803062e7356e7355be"
+    },
+    {
+      "path": "scripts/enrich_markers.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ef75e585c8c48e785f8d694b776d5c899a87de2f",
+      "size": 6002,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/ef75e585c8c48e785f8d694b776d5c899a87de2f"
+    },
+    {
+      "path": "scripts/export_audio.cmd",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b14d429b3631c0e9bb984a7157e8efa24467e89c",
+      "size": 351,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/b14d429b3631c0e9bb984a7157e8efa24467e89c"
+    },
+    {
+      "path": "scripts/export_audio.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "12549b240103bb486569eeb45c0aef0ed2c38b24",
+      "size": 5633,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/12549b240103bb486569eeb45c0aef0ed2c38b24"
+    },
+    {
+      "path": "scripts/export_images.cmd",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "62a1681ff0eb7b7d20ba1c2de5192ac25e3ba61b",
+      "size": 225,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/62a1681ff0eb7b7d20ba1c2de5192ac25e3ba61b"
+    },
+    {
+      "path": "scripts/export_languages.cmd",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9753a9811c9eb46b71b2a822475c4198f8782626",
+      "size": 355,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/9753a9811c9eb46b71b2a822475c4198f8782626"
+    },
+    {
+      "path": "scripts/export_languages.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "67a676e10e79e0110e552be95250f7b8414bf0f5",
+      "size": 1219,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/67a676e10e79e0110e552be95250f7b8414bf0f5"
+    },
+    {
+      "path": "scripts/export_markers.cmd",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6f6079e20412bf7690ac4ab60efa24174f74c59f",
+      "size": 1020,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/6f6079e20412bf7690ac4ab60efa24174f74c59f"
+    },
+    {
+      "path": "scripts/export_markers.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0a89a483c82ead1c72b3f561f48e27f594ff52f3",
+      "size": 6680,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/0a89a483c82ead1c72b3f561f48e27f594ff52f3"
+    },
+    {
+      "path": "scripts/export_solutions.cmd",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "65474bdf758756fbb1eb4f80db0fd8fe4a6a5316",
+      "size": 209,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/65474bdf758756fbb1eb4f80db0fd8fe4a6a5316"
+    },
+    {
+      "path": "scripts/export_subtitles.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "167410fddab35667a16ff5e29acd50a4a1191df3",
+      "size": 2089,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/167410fddab35667a16ff5e29acd50a4a1191df3"
+    },
+    {
+      "path": "scripts/export_texture.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c5ac573f7711b6a7e6d0ae4156f52e7c1d37eb82",
+      "size": 9345,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/c5ac573f7711b6a7e6d0ae4156f52e7c1d37eb82"
+    },
+    {
+      "path": "scripts/export_textures.cmd",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "756ef9e2588178192d6fa0ee37f20980b00af50b",
+      "size": 606,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/756ef9e2588178192d6fa0ee37f20980b00af50b"
+    },
+    {
+      "path": "scripts/export_tiles.cmd",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3f9a66cd41b1f35df4a2d62ae1127be2f4dfb8f0",
+      "size": 685,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/3f9a66cd41b1f35df4a2d62ae1127be2f4dfb8f0"
+    },
+    {
+      "path": "scripts/level_names.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6443598fc9de1cd90eb073e9edbc801a1b6be838",
+      "size": 222,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/6443598fc9de1cd90eb073e9edbc801a1b6be838"
+    },
+    {
+      "path": "scripts/levels",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "19b6f333b62447bff2d6bef739e24258fb3c970d",
+      "url": "https://api.github.com/repos/joric/ootss/git/trees/19b6f333b62447bff2d6bef739e24258fb3c970d"
+    },
+    {
+      "path": "scripts/levels/custom_1.5.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "519857e00d4b41e550ac4696b4d041ee08bb2616",
+      "size": 20086,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/519857e00d4b41e550ac4696b4d041ee08bb2616"
+    },
+    {
+      "path": "scripts/levels/custom_1.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "295f0fb70c0322f4d15fb80d2748e654298202f3",
+      "size": 14411,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/295f0fb70c0322f4d15fb80d2748e654298202f3"
+    },
+    {
+      "path": "scripts/levels/custom_2.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "17b5f4f912fdf4a1438f150edcb910b5cf8ea88e",
+      "size": 18685,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/17b5f4f912fdf4a1438f150edcb910b5cf8ea88e"
+    },
+    {
+      "path": "scripts/levels/custom_3.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e2933c419976e2d1af445225daf43e11b6b024ff",
+      "size": 15901,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/e2933c419976e2d1af445225daf43e11b6b024ff"
+    },
+    {
+      "path": "scripts/levels/solutions_custom.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b45c06e43d80998d2c2b4b7caefc371cef6e494f",
+      "size": 801,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/b45c06e43d80998d2c2b4b7caefc371cef6e494f"
+    },
+    {
+      "path": "scripts/make_regions.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "18dc8b6e0eb7348334b1681a5385157ed9d839e2",
+      "size": 2537,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/18dc8b6e0eb7348334b1681a5385157ed9d839e2"
+    },
+    {
+      "path": "scripts/map_capture.cmd",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9172d6af4ea5054a91844eacecadfe568454d2ed",
+      "size": 4065,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/9172d6af4ea5054a91844eacecadfe568454d2ed"
+    },
+    {
+      "path": "scripts/map_capture.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "56c7bb8a182bd82148f5a3f2b52256490436f5dc",
+      "size": 71627,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/56c7bb8a182bd82148f5a3f2b52256490436f5dc"
+    },
+    {
+      "path": "scripts/ootss.pz",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3b8768a5152c34e0f572e7e66251dfadb4cb6d1d",
+      "size": 71988,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/3b8768a5152c34e0f572e7e66251dfadb4cb6d1d"
+    },
+    {
+      "path": "scripts/player.ahk",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6fee057ae483e2344ca1574a562208953f1d55bd",
+      "size": 11994,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/6fee057ae483e2344ca1574a562208953f1d55bd"
+    },
+    {
+      "path": "scripts/simp_tool.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f99b7562c6931f7be171678dd0fbce39059ab92a",
+      "size": 64754,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/f99b7562c6931f7be171678dd0fbce39059ab92a"
+    },
+    {
+      "path": "scripts/sinking_star.CT",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ad7dceae999aedfefbdca43a4da5402a7543554e",
+      "size": 1033,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/ad7dceae999aedfefbdca43a4da5402a7543554e"
+    },
+    {
+      "path": "scripts/wikitactics_player.ahk",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2894bcf224752852b22020da0fcabdb6109b2832",
+      "size": 21017,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/2894bcf224752852b22020da0fcabdb6109b2832"
+    },
+    {
+      "path": "scripts/wt_converter.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5d8d4fcd6fa0d8ec2e146197781e80e48483e5a8",
+      "size": 31856,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/5d8d4fcd6fa0d8ec2e146197781e80e48483e5a8"
+    },
+    {
+      "path": "scripts/wt_crawler.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "22dc9103a106b9247baa35eff7aef3a19fdc645b",
+      "size": 47898,
+      "url": "https://api.github.com/repos/joric/ootss/git/blobs/22dc9103a106b9247baa35eff7aef3a19fdc645b"
+    }
+  ],
+  "truncated": false
+}

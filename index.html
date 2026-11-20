@@ -447,6 +447,8 @@ details.alt{border:1px dashed var(--line);border-radius:4px;padding:8px 10px;mar
 details.alt>summary{cursor:pointer;font-size:11.5px;color:var(--accent);letter-spacing:.02em;}
 details.alt>summary::marker{color:var(--dim);}
 details.alt[open]>summary{margin-bottom:8px;}
+.altWarn{margin-top:8px;padding:6px 9px;border-left:2px solid #c8a45c;background:#c8a45c14;
+  font-size:11px;line-height:1.7;color:#e0c08a;border-radius:0 3px 3px 0;}
 .rawsec{display:none;margin-top:8px;}
 .rawsec.on{display:block;}
 .hsegs{max-height:240px;overflow-y:auto;padding-bottom:2px;}
@@ -1680,7 +1682,7 @@ details.alt[open]>summary{margin-bottom:8px;}
   document.addEventListener("keydown", e => { if (e.key === "Escape") openAbout(false); });
 
   /* ---------- 关于：数据来源 · 版本记录 ---------- */
-  const VERSION = "0.11.5";
+  const VERSION = "0.11.6";
   const VERSION_DATE = "2026-11-19";
 
   function colophonHTML(){
@@ -1853,6 +1855,16 @@ details.alt[open]>summary{margin-bottom:8px;}
 <p class="q" style="margin-bottom:10px">从零开始整理，一路以「数据可核对」为准：凡是能拿到官方原文的，一律不意译。</p>
 <ol class="log">
   <li class="now">
+    <span class="v">v0.11.6</span><span class="d">${VERSION_DATE}</span>
+    <div class="t">走法数据源修正</div>
+    <ul>
+      <li>玩家实测反馈：部分关卡主解照走走不通，另解才正确</li>
+      <li>排查确认：主解由 WikiTactics 的录像转录而来（上游 scripts/export_solutions.cmd 可查），路线本身有误；另解为人工整理</li>
+      <li>105 关同时有两套解法，改为<b>另解作为主显示</b>，原主解降为折叠的「另一条走法」并附说明</li>
+      <li>仅有主解的 815 关暂无可替换数据，维持原样</li>
+    </ul>
+  </li>
+  <li>
     <span class="v">v0.11.5</span><span class="d">2026-11-19</span>
     <div class="t">去掉顶栏统计文字</div>
     <ul>
@@ -2353,9 +2365,15 @@ level and solution data from <a href="https://github.com/joric/ootss" target="_b
       const rankText = peers.length > 3 && rank
         ? (isEN() ? `shortest of ${peers.length} in this area` : `在该区域 ${peers.length} 关里第 ${rank} 短`)
         : "";
-      html += `<div class="sec"><h3>${E ? "Step-by-step" : "逐步走法"}</h3>${platBarHTML()}${keyGridHTML()}${solHTML(l.s, rankText)}
+      // 走法排序：有另解时把另解放前面。
+      // 原因：主解来自 WikiTactics 的录像转录，玩家实测部分关卡照走根本走不通（路线本身错），
+      // 另解是人工整理并验证过的，可靠得多。与「动作键次数」无关。
+      const primary = l.s2 || l.s;
+      const secondary = l.s2 ? l.s : "";
+      const primaryIsAlt = !!l.s2;
+      html += `<div class="sec"><h3>${E ? "Step-by-step" : "逐步走法"}</h3>${platBarHTML()}${keyGridHTML()}${solHTML(primary, primaryIsAlt ? "" : rankText)}
         <div class="routeNote">${E ? routeNoteEN() : routeNoteZH()}</div>
-        ${l.s2 ? `<details class="alt"><summary>${E ? `Alternative solution (${unpack(l.s2).length} steps, different route)` : `另一套解法（${unpack(l.s2).length} 步，换一种走法）`}</summary>${solHTML(l.s2)}</details>` : ""}
+        ${secondary ? `<details class="alt"><summary>${E ? `Another route (${unpack(secondary).length} steps)` : `另一条走法（${unpack(secondary).length} 步）`}</summary>${solHTML(secondary)}${primaryIsAlt ? `<div class="altWarn">${E ? "Transcribed from a replay recording; on some levels this route doesn't actually work. Use the route above." : "这条由 wiki 的录像回放转录，部分关卡照走走不通（路线本身有误）。优先用上面的走法。"}</div>` : ""}</details>` : ""}
         </div>`;
     } else {
       html += `<div class="sec"><h3>${E ? "Step-by-step" : "逐步走法"}</h3><div class="none">${E ? "No public step-by-step solution for this level yet. Try the area notes below, or jump to the full area guide." : "这一关暂时没有收录到公开的逐步解法。先按下面的区域打法推导，卡住可以直接跳到该区域的完整攻略页。"}</div></div>`;

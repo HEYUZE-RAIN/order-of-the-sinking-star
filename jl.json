@@ -1,0 +1,194 @@
+[
+  {
+    "name": "font-awesome",
+    "path": "js/lib/font-awesome",
+    "sha": "6e9569256f2dc708e7341860994c8e0e46261c8d",
+    "size": 0,
+    "url": "https://api.github.com/repos/joric/ootss/contents/js/lib/font-awesome?ref=main",
+    "html_url": "https://github.com/joric/ootss/tree/main/js/lib/font-awesome",
+    "git_url": "https://api.github.com/repos/joric/ootss/git/trees/6e9569256f2dc708e7341860994c8e0e46261c8d",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/joric/ootss/contents/js/lib/font-awesome?ref=main",
+      "git": "https://api.github.com/repos/joric/ootss/git/trees/6e9569256f2dc708e7341860994c8e0e46261c8d",
+      "html": "https://github.com/joric/ootss/tree/main/js/lib/font-awesome"
+    }
+  },
+  {
+    "name": "imageSearch",
+    "path": "js/lib/imageSearch",
+    "sha": "cbfeb27077b86e60651f681f04a94f0e08e34a8c",
+    "size": 0,
+    "url": "https://api.github.com/repos/joric/ootss/contents/js/lib/imageSearch?ref=main",
+    "html_url": "https://github.com/joric/ootss/tree/main/js/lib/imageSearch",
+    "git_url": "https://api.github.com/repos/joric/ootss/git/trees/cbfeb27077b86e60651f681f04a94f0e08e34a8c",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/joric/ootss/contents/js/lib/imageSearch?ref=main",
+      "git": "https://api.github.com/repos/joric/ootss/git/trees/cbfeb27077b86e60651f681f04a94f0e08e34a8c",
+      "html": "https://github.com/joric/ootss/tree/main/js/lib/imageSearch"
+    }
+  },
+  {
+    "name": "images",
+    "path": "js/lib/images",
+    "sha": "c5363f98fb7e8e325ebb8876dbd5aabedfe1804e",
+    "size": 0,
+    "url": "https://api.github.com/repos/joric/ootss/contents/js/lib/images?ref=main",
+    "html_url": "https://github.com/joric/ootss/tree/main/js/lib/images",
+    "git_url": "https://api.github.com/repos/joric/ootss/git/trees/c5363f98fb7e8e325ebb8876dbd5aabedfe1804e",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/joric/ootss/contents/js/lib/images?ref=main",
+      "git": "https://api.github.com/repos/joric/ootss/git/trees/c5363f98fb7e8e325ebb8876dbd5aabedfe1804e",
+      "html": "https://github.com/joric/ootss/tree/main/js/lib/images"
+    }
+  },
+  {
+    "name": "leaflet-canvas",
+    "path": "js/lib/leaflet-canvas",
+    "sha": "cd4b129019cf59916040b22160285ea8bbee9ae7",
+    "size": 0,
+    "url": "https://api.github.com/repos/joric/ootss/contents/js/lib/leaflet-canvas?ref=main",
+    "html_url": "https://github.com/joric/ootss/tree/main/js/lib/leaflet-canvas",
+    "git_url": "https://api.github.com/repos/joric/ootss/git/trees/cd4b129019cf59916040b22160285ea8bbee9ae7",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/joric/ootss/contents/js/lib/leaflet-canvas?ref=main",
+      "git": "https://api.github.com/repos/joric/ootss/git/trees/cd4b129019cf59916040b22160285ea8bbee9ae7",
+      "html": "https://github.com/joric/ootss/tree/main/js/lib/leaflet-canvas"
+    }
+  },
+  {
+    "name": "leaflet-edgebuffer",
+    "path": "js/lib/leaflet-edgebuffer",
+    "sha": "88caacf94d2101cd7af6ca1504de282f7c827a57",
+    "size": 0,
+    "url": "https://api.github.com/repos/joric/ootss/contents/js/lib/leaflet-edgebuffer?ref=main",
+    "html_url": "https://github.com/joric/ootss/tree/main/js/lib/leaflet-edgebuffer",
+    "git_url": "https://api.github.com/repos/joric/ootss/git/trees/88caacf94d2101cd7af6ca1504de282f7c827a57",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/joric/ootss/contents/js/lib/leaflet-edgebuffer?ref=main",
+      "git": "https://api.github.com/repos/joric/ootss/git/trees/88caacf94d2101cd7af6ca1504de282f7c827a57",
+      "html": "https://github.com/joric/ootss/tree/main/js/lib/leaflet-edgebuffer"
+    }
+  },
+  {
+    "name": "leaflet-minimap",
+    "path": "js/lib/leaflet-minimap",
+    "sha": "8e2ea3984538f7b209c20239e0c56ab9366ae708",
+    "size": 0,
+    "url": "https://api.github.com/repos/joric/ootss/contents/js/lib/leaflet-minimap?ref=main",
+    "html_url": "https://github.com/joric/ootss/tree/main/js/lib/leaflet-minimap",
+    "git_url": "https://api.github.com/repos/joric/ootss/git/trees/8e2ea3984538f7b209c20239e0c56ab9366ae708",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/joric/ootss/contents/js/lib/leaflet-minimap?ref=main",
+      "git": "https://api.github.com/repos/joric/ootss/git/trees/8e2ea3984538f7b209c20239e0c56ab9366ae708",
+      "html": "https://github.com/joric/ootss/tree/main/js/lib/leaflet-minimap"
+    }
+  },
+  {
+    "name": "leaflet-mouseposition",
+    "path": "js/lib/leaflet-mouseposition",
+    "sha": "faa75e6916b7768f16a2c868431216222a68f491",
+    "size": 0,
+    "url": "https://api.github.com/repos/joric/ootss/contents/js/lib/leaflet-mouseposition?ref=main",
+    "html_url": "https://github.com/joric/ootss/tree/main/js/lib/leaflet-mouseposition",
+    "git_url": "https://api.github.com/repos/joric/ootss/git/trees/faa75e6916b7768f16a2c868431216222a68f491",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/joric/ootss/contents/js/lib/leaflet-mouseposition?ref=main",
+      "git": "https://api.github.com/repos/joric/ootss/git/trees/faa75e6916b7768f16a2c868431216222a68f491",
+      "html": "https://github.com/joric/ootss/tree/main/js/lib/leaflet-mouseposition"
+    }
+  },
+  {
+    "name": "leaflet-search",
+    "path": "js/lib/leaflet-search",
+    "sha": "5194a084943ff69ddfaf94a11b7406ae2cf11cf1",
+    "size": 0,
+    "url": "https://api.github.com/repos/joric/ootss/contents/js/lib/leaflet-search?ref=main",
+    "html_url": "https://github.com/joric/ootss/tree/main/js/lib/leaflet-search",
+    "git_url": "https://api.github.com/repos/joric/ootss/git/trees/5194a084943ff69ddfaf94a11b7406ae2cf11cf1",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/joric/ootss/contents/js/lib/leaflet-search?ref=main",
+      "git": "https://api.github.com/repos/joric/ootss/git/trees/5194a084943ff69ddfaf94a11b7406ae2cf11cf1",
+      "html": "https://github.com/joric/ootss/tree/main/js/lib/leaflet-search"
+    }
+  },
+  {
+    "name": "leaflet-toolbar",
+    "path": "js/lib/leaflet-toolbar",
+    "sha": "6ac57e20a9fa016fefe3febda7f178091f7d8465",
+    "size": 0,
+    "url": "https://api.github.com/repos/joric/ootss/contents/js/lib/leaflet-toolbar?ref=main",
+    "html_url": "https://github.com/joric/ootss/tree/main/js/lib/leaflet-toolbar",
+    "git_url": "https://api.github.com/repos/joric/ootss/git/trees/6ac57e20a9fa016fefe3febda7f178091f7d8465",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/joric/ootss/contents/js/lib/leaflet-toolbar?ref=main",
+      "git": "https://api.github.com/repos/joric/ootss/git/trees/6ac57e20a9fa016fefe3febda7f178091f7d8465",
+      "html": "https://github.com/joric/ootss/tree/main/js/lib/leaflet-toolbar"
+    }
+  },
+  {
+    "name": "leaflet",
+    "path": "js/lib/leaflet",
+    "sha": "15ce260e4f14f6ba4cf32e02b4644f9c8f95217c",
+    "size": 0,
+    "url": "https://api.github.com/repos/joric/ootss/contents/js/lib/leaflet?ref=main",
+    "html_url": "https://github.com/joric/ootss/tree/main/js/lib/leaflet",
+    "git_url": "https://api.github.com/repos/joric/ootss/git/trees/15ce260e4f14f6ba4cf32e02b4644f9c8f95217c",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/joric/ootss/contents/js/lib/leaflet?ref=main",
+      "git": "https://api.github.com/repos/joric/ootss/git/trees/15ce260e4f14f6ba4cf32e02b4644f9c8f95217c",
+      "html": "https://github.com/joric/ootss/tree/main/js/lib/leaflet"
+    }
+  },
+  {
+    "name": "puzzlescript",
+    "path": "js/lib/puzzlescript",
+    "sha": "9421830713a74a4fea62c7c26cf14a323b5bfcf7",
+    "size": 0,
+    "url": "https://api.github.com/repos/joric/ootss/contents/js/lib/puzzlescript?ref=main",
+    "html_url": "https://github.com/joric/ootss/tree/main/js/lib/puzzlescript",
+    "git_url": "https://api.github.com/repos/joric/ootss/git/trees/9421830713a74a4fea62c7c26cf14a323b5bfcf7",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/joric/ootss/contents/js/lib/puzzlescript?ref=main",
+      "git": "https://api.github.com/repos/joric/ootss/git/trees/9421830713a74a4fea62c7c26cf14a323b5bfcf7",
+      "html": "https://github.com/joric/ootss/tree/main/js/lib/puzzlescript"
+    }
+  },
+  {
+    "name": "swiper",
+    "path": "js/lib/swiper",
+    "sha": "5fc326a1dfa0997f4c1ca992eaae55b2302d2d1b",
+    "size": 0,
+    "url": "https://api.github.com/repos/joric/ootss/contents/js/lib/swiper?ref=main",
+    "html_url": "https://github.com/joric/ootss/tree/main/js/lib/swiper",
+    "git_url": "https://api.github.com/repos/joric/ootss/git/trees/5fc326a1dfa0997f4c1ca992eaae55b2302d2d1b",
+    "download_url": null,
+    "type": "dir",
+    "_links": {
+      "self": "https://api.github.com/repos/joric/ootss/contents/js/lib/swiper?ref=main",
+      "git": "https://api.github.com/repos/joric/ootss/git/trees/5fc326a1dfa0997f4c1ca992eaae55b2302d2d1b",
+      "html": "https://github.com/joric/ootss/tree/main/js/lib/swiper"
+    }
+  }
+]
