@@ -84,19 +84,18 @@ Missing entry-point to Worker script or to assets directory
 
 ---
 
-## 与旧项目的区别
+## 当前项目
 
-| | 旧项目 `order-of-the-sinking-star` | 新项目（Git 集成） |
-|---|---|---|
-| 部署方式 | 直传（`npm run deploy:cf`） | 推送自动构建 |
-| 需要令牌 | 是 | **否** |
-| 域名 | order-of-the-sinking-star-389.pages.dev | 取决于项目名 |
-| 当前版本 | v0.11.7（停止更新） | 首次构建后即为最新 |
+- 项目名 `order-of-the-sinking-star-map`
+- 地址 https://order-of-the-sinking-star-map.pages.dev
+- 生产分支 `main`
+- 已启用 Git 集成，推送即自动构建
 
-旧项目不用删，留着当快照。
+早期的直传项目 `order-of-the-sinking-star`（域名 `-389`）已删除。
+两者方式不同，`order-of-the-sinking-star-389.pages.dev` 不再可用。
 
 > Cloudflare 规定 Git 集成的项目**无法切回直传**。
-> 所以 `tools/deploy-cf.js` 只对旧项目或将来新建的直传项目有效。
+> 所以 `tools/deploy-cf.js` 对新项目无效，仅对将来另建的直传项目可用。
 
 ---
 

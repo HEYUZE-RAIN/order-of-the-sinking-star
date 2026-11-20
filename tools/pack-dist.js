@@ -95,4 +95,4 @@ for (const m of ['ground', 'sky', 'under']) {
 }
 
 console.log(`\n✓ dist/ 就绪：${count} 个文件，${(total / 1024 / 1024).toFixed(1)} MB`);
-console.log('  下一步：npx wrangler pages deploy dist --project-name order-of-the-sinking-star');
+console.log('  dist/ 供 tools/deploy-cf.js 直传使用（可选，日常部署靠 git push 自动构建）');

@@ -8,10 +8,10 @@ An interactive full-level map for **Order of the Sinking Star**: 920 level posit
 
 **在线版 / Live demo**
 
+- Cloudflare Pages：https://order-of-the-sinking-star-map.pages.dev  ← 国内访问较快
 - GitHub Pages：https://heyuze-rain.github.io/order-of-the-sinking-star/
-- Cloudflare Pages：https://order-of-the-sinking-star-389.pages.dev
 
-两份同时在线，互为备份。部署流程见 [DEPLOY.md](DEPLOY.md)。
+两份同时在线，互为备份。推送代码即自动部署，无需任何令牌。
 
 ---
 

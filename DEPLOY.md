@@ -1,111 +1,86 @@
-# 部署到 Cloudflare Pages
+# 部署
 
-GitHub Pages 够用的情况下这是**可选**的第二份托管。用途：
+本项目**推送代码即自动部署**，两份托管同时在线，无需任何令牌。
 
-- 国内访问通常比 `github.io` 快
-- **无限带宽**（GitHub Pages 是 100GB/月软限）
-- 两份托管互为备份，一边挂了另一边还在
+## 在线地址
 
-全程免费，不需要信用卡。
-
----
-
-## 已上线地址
-
-**https://order-of-the-sinking-star-389.pages.dev**
-
-生产分支 `main`，当前部署 ID `89c4722b`。
-
----
-
-## 一次性准备
-
-### 1. 注册 Cloudflare
-
-https://dash.cloudflare.com/sign-up
-
-邮箱 + 密码即可，不绑卡。
-
-### 2. 创建 API Token
-
-https://dash.cloudflare.com/profile/api-tokens → **Create Custom Token**
-
-| Type | 权限 | 级别 |
+| 平台 | 地址 | 说明 |
 |---|---|---|
-| Account | Cloudflare Pages | Edit |
-| Account | Cloudflare Pages | Read |
+| **Cloudflare Pages** | https://order-of-the-sinking-star-map.pages.dev | 国内访问较快，无限带宽 |
+| **GitHub Pages** | https://heyuze-rain.github.io/order-of-the-sinking-star/ | 备份 |
 
-Account Resources 选自己的账号。
+生产分支均为 `main`。
 
-### 3. 拿到 Account ID
+---
 
-后台首页右栏，或 https://dash.cloudflare.com/ 的 URL 里（32 位十六进制）。
+## Cloudflare Pages
 
-### 4. 设环境变量
+已配置 Git 集成，`git push` 后自动构建上线。
+
+构建配置（在 Cloudflare 控制台 → Settings → Build）：
+
+| 字段 | 值 |
+|---|---|
+| Build command | `node tools/build-public.js` |
+| Build output directory | `public` |
+
+工作原理：`tools/build-public.js` 只把 `index.html` + `data/` + `assets/`
+复制到 `public/`，仓库里的工具与文档不会被发布。
+
+详细步骤与踩坑记录见 **[CLOUDFLARE-GIT.md](CLOUDFLARE-GIT.md)**。
+
+---
+
+## GitHub Pages
+
+在仓库 Settings → Pages 里设为 `main` 分支 `/ (root)`，推送后自动更新。
+
+注意：GitHub Pages 会发布仓库根目录的所有文件（`tools/`、`README.md` 等
+也能通过网页访问）。由于仓库本身是公开的，这不构成额外泄露，故未处理。
+
+---
+
+## 本地开发
+
+不需要构建，直接打开即可：
 
 ```bash
-export CLOUDFLARE_API_TOKEN="你的 token"
-export CLOUDFLARE_ACCOUNT_ID="你的 account id"
-```
-
-Windows CMD：
-
-```cmd
-set CLOUDFLARE_API_TOKEN=你的token
-set CLOUDFLARE_ACCOUNT_ID=你的accountid
+# 方式一：双击 index.html
+# 方式二：起个静态服务器
+python -m http.server 8000
 ```
 
 ---
 
-## 部署
+## 历史：直传方式（已弃用）
 
-```bash
-npm run deploy
-```
+早期用 `tools/deploy-cf.js` 直连 Cloudflare API 上传，需要 API 令牌。
+连续两次因令牌被删导致无法部署，后改为 Git 集成，现不再使用。
 
-做两件事：
+相关脚本保留在 `tools/` 下（`pack-dist.js`、`deploy-cf.js`），
+`package.json` 里对应 `npm run deploy:cf`。如将来需要临时直传仍可用。
 
-1. `tools/pack-dist.js` 打包 → `dist/`（929 文件 / 40MB，只含站点文件）
-2. `tools/deploy-cf.js` 直连 Cloudflare API 上传
-
-流程是：拿上传 JWT → `check-missing` 去重 → 分批上传 → `upsert-hashes` → 创建 deployment。
-所以**再次部署只会传改动过的文件**，通常几秒钟完成。
-
----
-
-## 为什么不用 wrangler
-
-一开始用 `wrangler pages deploy`，遇到三个坑：
+踩过的坑记录在此，避免重犯：
 
 | 问题 | 表现 | 解决 |
 |---|---|---|
-| `account_id` 不支持 | Pages 配置校验报错 | 改走环境变量 |
+| Pages 配置不支持 `account_id` | 配置校验报错 | 改走环境变量 |
 | 单批 8MB 上传中断 | `fetch failed`，无有效信息 | 降到 2MB 分批 |
-| manifest 传法错误 | `8000096 manifest field expected` | **必须是普通文本字段**，不能当文件传 |
-
-最后一条最坑：`formData.append("manifest", JSON.stringify(manifest))`，
-用 `Blob` 或 curl 的 `@file` 都报错，只有纯字符串才行。
-
-另外本机网络对 `api.cloudflare.com` 是**间歇性阻断**（TLS 握手被掐），
-`deploy-cf.js` 因此内置了指数退避重试。
+| manifest 传法错误 | `8000096 manifest field expected` | 必须是普通文本字段，不能当文件传 |
+| `api.cloudflare.com` 间歇性阻断 | TLS 握手被掐 | 脚本内置指数退避重试 |
 
 ---
 
-## 注意事项
+## 换到其他托管
 
-**wrangler 仍保留在 devDependencies**
+站点是纯静态的，`public/`（或仓库里的 `index.html` + `data/` + `assets/`）
+可直接部署到任何静态托管：
 
-`npm run login` 还能用来自查账号状态，但部署不走它。
+| 平台 | 免费额度 | 特点 |
+|---|---|---|
+| Cloudflare Pages | 无限带宽 | 国内相对快 |
+| Netlify | 100GB/月 | 拖拽部署最省事 |
+| Vercel | 100GB/月 | 与 Next.js 生态好 |
+| 自建 nginx | — | 完全可控 |
 
-**缓存**
-
-`_headers` 给 `/assets/*` 设了 7 天缓存。换图但文件名不变时，访客可能看到旧图 ——
-去 Cloudflare 后台 Purge Cache，或给文件名加版本号。
-
-**图片必须先在本地**
-
-`pack-dist.js` 会检查：少于 920 张关卡图或缺底图会警告。
-
-**换到其他托管**
-
-`dist/` 是纯静态目录。GitHub Pages 与 Cloudflare Pages 两份已同时在线，互为备份。
+换平台不需要改 `index.html` 任何一行。

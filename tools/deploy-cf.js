@@ -28,7 +28,7 @@ const arg = (n, d) => {
 
 const TOKEN = process.env.CLOUDFLARE_API_TOKEN;
 const ACCOUNT = process.env.CLOUDFLARE_ACCOUNT_ID;
-const PROJECT = arg('project', 'order-of-the-sinking-star');
+const PROJECT = arg('project', 'order-of-the-sinking-star-map');
 const BRANCH = arg('branch', 'main');
 
 if (!TOKEN || !ACCOUNT) {
