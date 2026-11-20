@@ -60,6 +60,16 @@ Missing entry-point to Worker script or to assets directory
 `index.html` + `data/` + `assets/`。
 已用脚本验证：必需文件全部保留，脚本文档全部排除。
 
+**仓库里没有 `wrangler.toml`**
+
+这个坑踩过一次，记录在此：Pages 构建时会读取仓库里的 `wrangler.toml`，
+其中的 `pages_build_output_dir` **会覆盖控制台里填的 Build output directory**。
+
+之前该字段是 `./dist`（直传用），而 `dist` 在 `.gitignore` 里、Git 构建时并不存在，
+于是报 `Error: Output directory "dist" not found.`
+
+现已删除该文件。直传改用 `tools/deploy-cf.js`（走 Cloudflare API，不依赖配置文件）。
+
 **`package.json` 里没有 `deploy` 脚本**
 
 原本有 `npm run deploy`，Workers 构建会把它识别成部署命令去执行。

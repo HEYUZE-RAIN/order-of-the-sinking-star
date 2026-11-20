@@ -2,7 +2,7 @@
 /**
  * 打包一个「只含站点文件」的目录，供 Cloudflare Pages 直传。
  *
- * 为什么不在 wrangler.toml 里直接写 pages_build_output_dir = "."
+ * 为什么不直接用仓库根当输出目录
  * 因为那样会把 .git/、tools/、README 之类一起传上去（几十 MB 的 git 对象纯属浪费）。
  *
  * 产物：dist/  （已在 .gitignore 里）
@@ -50,7 +50,7 @@ function copyDir(srcdir, dstdir, re) {
 rmrf(DIST);
 fs.mkdirSync(DIST, { recursive: true });
 
-// Cloudflare Pages 的响应头配置（wrangler.toml 里不支持 [[headers]]，要放 _headers 文件）
+// Cloudflare Pages 的响应头配置（必须放 _headers 文件，配置里不支持 headers 字段）
 fs.writeFileSync(path.join(DIST, '_headers'), [
   '/*',
   '  X-Content-Type-Options: nosniff',
