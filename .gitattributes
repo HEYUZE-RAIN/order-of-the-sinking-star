@@ -1,0 +1,10 @@
+# 统一用 LF 存储与检出，避免在 Windows 上被 autocrlf 转成 CRLF
+# 上次 index.html 就是因为换行符变化导致整个文件显示为全量 diff
+* text=auto eol=lf
+
+# 二进制资源不做换行转换
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.webp binary
+*.ico binary

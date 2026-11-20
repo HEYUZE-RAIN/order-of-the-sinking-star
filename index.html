@@ -447,8 +447,9 @@ details.alt{border:1px dashed var(--line);border-radius:4px;padding:8px 10px;mar
 details.alt>summary{cursor:pointer;font-size:11.5px;color:var(--accent);letter-spacing:.02em;}
 details.alt>summary::marker{color:var(--dim);}
 details.alt[open]>summary{margin-bottom:8px;}
-.altWarn{margin-top:8px;padding:6px 9px;border-left:2px solid #c8a45c;background:#c8a45c14;
-  font-size:11px;line-height:1.7;color:#e0c08a;border-radius:0 3px 3px 0;}
+.altWarn{margin-top:8px;padding:7px 10px;border-left:2px solid #c8a45c;background:#c8a45c14;
+  font-size:11px;line-height:1.75;color:#e0c08a;border-radius:0 3px 3px 0;margin-bottom:8px;}
+.altWarn b{color:#f0d3a0;}
 .rawsec{display:none;margin-top:8px;}
 .rawsec.on{display:block;}
 .hsegs{max-height:240px;overflow-y:auto;padding-bottom:2px;}
@@ -1682,7 +1683,7 @@ details.alt[open]>summary{margin-bottom:8px;}
   document.addEventListener("keydown", e => { if (e.key === "Escape") openAbout(false); });
 
   /* ---------- 关于：数据来源 · 版本记录 ---------- */
-  const VERSION = "0.11.6";
+  const VERSION = "0.11.7";
   const VERSION_DATE = "2026-11-19";
 
   function colophonHTML(){
@@ -1855,13 +1856,22 @@ details.alt[open]>summary{margin-bottom:8px;}
 <p class="q" style="margin-bottom:10px">从零开始整理，一路以「数据可核对」为准：凡是能拿到官方原文的，一律不意译。</p>
 <ol class="log">
   <li class="now">
-    <span class="v">v0.11.6</span><span class="d">${VERSION_DATE}</span>
-    <div class="t">走法数据源修正</div>
+    <span class="v">v0.11.7</span><span class="d">${VERSION_DATE}</span>
+    <div class="t">未验证走法加提示</div>
     <ul>
-      <li>玩家实测反馈：部分关卡主解照走走不通，另解才正确</li>
-      <li>排查确认：主解由 WikiTactics 的录像转录而来（上游 scripts/export_solutions.cmd 可查），路线本身有误；另解为人工整理</li>
-      <li>105 关同时有两套解法，改为<b>另解作为主显示</b>，原主解降为折叠的「另一条走法」并附说明</li>
-      <li>仅有主解的 815 关暂无可替换数据，维持原样</li>
+      <li>106 关的主解由 wiki 录像转录（含回放占位符 B），其中<b>无一关有另解可替换</b></li>
+      <li>这些关卡在「逐步走法」上方加提示：未经实测验证，走不通时建议撤回换顺序</li>
+      <li>有另解的 104 关不受影响，另解已作为主显示</li>
+      <li>修正：补 <code>.gitattributes</code> 统一 LF 换行；移除上一提交误带的 7 个临时 JSON 文件</li>
+    </ul>
+  </li>
+  <li>
+    <span class="v">v0.11.6</span><span class="d">2026-11-20</span>
+    <div class="t">另解优先显示</div>
+    <ul>
+      <li>玩家实测反馈部分关卡主解照走走不通，另解才正确</li>
+      <li>排查确认：主解由 WikiTactics 的录像转录而来（上游 <code>scripts/export_solutions.cmd</code> 可查），路线本身有误；另解为人工整理</li>
+      <li>104 关同时有两套解法，改为<b>另解作为主显示</b>，原主解降为折叠的「另一条走法」并附说明</li>
     </ul>
   </li>
   <li>
@@ -2366,12 +2376,17 @@ level and solution data from <a href="https://github.com/joric/ootss" target="_b
         ? (isEN() ? `shortest of ${peers.length} in this area` : `在该区域 ${peers.length} 关里第 ${rank} 短`)
         : "";
       // 走法排序：有另解时把另解放前面。
-      // 原因：主解来自 WikiTactics 的录像转录，玩家实测部分关卡照走根本走不通（路线本身错），
-      // 另解是人工整理并验证过的，可靠得多。与「动作键次数」无关。
+      // 主解由 WikiTactics 的录像转录而来（上游 scripts/export_solutions.cmd 可查），
+      // 玩家实测部分关卡照走根本走不通；另解是人工整理验证过的，可靠得多。
       const primary = l.s2 || l.s;
       const secondary = l.s2 ? l.s : "";
       const primaryIsAlt = !!l.s2;
-      html += `<div class="sec"><h3>${E ? "Step-by-step" : "逐步走法"}</h3>${platBarHTML()}${keyGridHTML()}${solHTML(primary, primaryIsAlt ? "" : rankText)}
+      // 主解里出现 B 说明这条是录像转录的，不是实测走法。
+      // 有另解时另解已顶上；没有另解的只能如实标注，别让人照着走死路。
+      const unverified = !primaryIsAlt && /B/.test(primary);
+      html += `<div class="sec"><h3>${E ? "Step-by-step" : "逐步走法"}</h3>
+        ${unverified ? `<div class="altWarn">${E ? "This route was transcribed from a wiki replay and is <b>not verified</b>. Some levels can't be cleared by following it as written. The directions are broadly right — if you get stuck, undo a few steps and try a different order, or use the external guides below." : "这条走法由 wiki 录像转录，<b>未经实测验证</b>。部分关卡照着走会卡住。方向序列大体是对的 —— 走不通时建议撤回上一步换个顺序，或参考下面的外部攻略。"}</div>` : ""}
+        ${platBarHTML()}${keyGridHTML()}${solHTML(primary, primaryIsAlt ? "" : rankText)}
         <div class="routeNote">${E ? routeNoteEN() : routeNoteZH()}</div>
         ${secondary ? `<details class="alt"><summary>${E ? `Another route (${unpack(secondary).length} steps)` : `另一条走法（${unpack(secondary).length} 步）`}</summary>${solHTML(secondary)}${primaryIsAlt ? `<div class="altWarn">${E ? "Transcribed from a replay recording; on some levels this route doesn't actually work. Use the route above." : "这条由 wiki 的录像回放转录，部分关卡照走走不通（路线本身有误）。优先用上面的走法。"}</div>` : ""}</details>` : ""}
         </div>`;
