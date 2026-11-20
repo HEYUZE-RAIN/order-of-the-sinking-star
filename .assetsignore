@@ -1,0 +1,26 @@
+# Cloudflare Pages 构建时排除这些文件，不把它们发布成静态资源。
+# 语法同 .gitignore。站点真正需要的只有 index.html、data/、assets/。
+
+# 源码与工具
+tools/
+.github/
+
+# 文档
+README.md
+DEPLOY.md
+CLOUDFLARE-GIT.md
+POST.md
+LICENSE
+
+# 工程配置
+package.json
+package-lock.json
+wrangler.toml
+.gitignore
+.gitattributes
+
+# 本地数据与产物
+local/
+node_modules/
+dist/
+.workbuddy/
