@@ -33,32 +33,30 @@ Missing entry-point to Worker script or to assets directory
 | Project name | `ootss-map`（随便，决定域名） |
 | Production branch | `main` |
 | Framework preset | **None** |
-| **Build command** | **`exit 0`** |
-| **Build output directory** | **`/`** |
+| **Build command** | **`node tools/build-public.js`** |
+| **Build output directory** | **`public`** |
 | Root directory | 留空 |
 
 7. **Save and Deploy**
 
-### 为什么 Build command 是 `exit 0` 而不是留空
+### 为什么要跑 build-public.js
 
-官方对纯静态站的说明：`exit 0` 表示「没有构建步骤，直接成功」。
-留空在某些版本的界面上会让构建流程拿不到命令、回退到默认的 `wrangler deploy`，
-正是上面那个报错的来源。填 `exit 0` 是明确、无歧义的选择。
+输出目录若直接指向仓库根，`tools/`、`README.md`、`package.json` 也会被当成
+静态资源公开（实测过：`https://<站点>/tools/build-maps.js` 能直接访问）。
 
-### 为什么输出目录是 `/`
+`.assetsignore` **对 Pages 无效** —— 它只作用于 Workers 静态资源，Pages 构建不读取。
 
-`index.html` 就在仓库根目录，资源全用相对路径，根目录即站点根。
-（之前写的 `./dist` 是直传用的，Git 构建时 `dist` 根本不存在，因为它在 `.gitignore` 里。）
+所以用 `tools/build-public.js` 把 `index.html` + `data/` + `assets/` 复制到 `public/`，
+输出目录指向 `public/`，其余一概不发布。脚本还会检查图片是否齐全，并生成 `_headers`。
 
 ---
 
 ## 已做的准备
 
-**`.assetsignore`**
+**`tools/build-public.js`**
 
-构建时排除 `tools/`、`README.md`、`package.json` 等，只发布
-`index.html` + `data/` + `assets/`。
-已用脚本验证：必需文件全部保留，脚本文档全部排除。
+构建命令本身。只复制 `index.html` + `data/` + `assets/` 到 `public/`，
+并生成缓存头。已用脚本验证：必需文件全保留，脚本文档全排除。
 
 **仓库里没有 `wrangler.toml`**
 
@@ -80,7 +78,8 @@ Missing entry-point to Worker script or to assets directory
 ## 构建后的检查
 
 - 构建日志里应当**没有** `wrangler` 字样
-- 日志应显示上传了约 928 个文件
+- 应看到 `✓ public/ 就绪 · 底图 3 · 关卡图 920 · 40.1 MB`
+- 构建后 `https://<站点>/README.md` 应当返回 **404**
 - 打开 `https://<你的项目名>.pages.dev`，底图与 920 个点位都要正常显示
 
 ---

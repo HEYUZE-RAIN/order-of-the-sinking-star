@@ -42,6 +42,7 @@ npm-debug.log*
 
 # Cloudflare Pages 部署产物（tools/pack-dist.js 生成）
 dist/
+public/
 
 # 临时文件
 *.tmp
