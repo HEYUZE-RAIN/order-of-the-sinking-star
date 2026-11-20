@@ -110,6 +110,16 @@ async function main() {
     process.exit(1);
   }
 
+  // 防呆：dist 里的页面必须与仓库里的 index.html 一致。
+  // 之前直接跑本脚本跳过了打包，结果把旧包传上去，线上版本号没变，白查半天。
+  const srcHtml = fs.readFileSync(path.join(ROOT, 'index.html'));
+  const distHtml = fs.readFileSync(path.join(DIST, 'index.html'));
+  if (!srcHtml.equals(distHtml)) {
+    console.error('✗ dist/index.html 与 index.html 不一致（忘了打包？）');
+    console.error('  请先跑：node tools/pack-dist.js');
+    process.exit(1);
+  }
+
   const files = walk(DIST);
   const total = files.reduce((s, f) => s + f.size, 0);
   console.log(`项目 ${PROJECT} · 分支 ${BRANCH}`);
