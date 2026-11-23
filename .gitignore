@@ -45,6 +45,9 @@ dist/
 public/
 
 # 临时文件
+_*.html
+_*.png
+_*.json
 *.tmp
 *.log
 _tmp*
