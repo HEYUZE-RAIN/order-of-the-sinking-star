@@ -562,6 +562,8 @@ window.I18N = {
     "index.sum": "Grouped by area · current map layer only",
     "index.markLayer": "Mark this whole layer as cleared",
     "index.clear": "Clear all records",
+    "index.export": "Export progress",
+    "index.import": "Import progress",
     "index.showAll": "Show all",
     "index.summary": "{areas} areas · {done}/{total} cleared",
     "index.empty": "No level data for this layer",
