@@ -1544,9 +1544,9 @@ details.alt[open]>summary{margin-bottom:8px;}
     const ctx = mkCtx;
     const W = mkCanvas.width, H = mkCanvas.height;
 
-    // 画布尺寸 = 视口尺寸 * dpr；坐标系按 CSS 像素来
+    // 坐标系按 CSS 像素算（setTransform 已乘 dpr），clearRect 也要用 CSS 尺寸
     ctx.setTransform(mkDpr, 0, 0, mkDpr, 0, 0);
-    ctx.clearRect(0, 0, W, H);
+    ctx.clearRect(0, 0, W / mkDpr, H / mkDpr);
 
     // 动画期间：在起点与终点的 translate/scale 之间插值，
     // 这样标记与瓦片用同一条缓动曲线一起缩放。
@@ -1559,9 +1559,10 @@ details.alt[open]>summary{margin-bottom:8px;}
       // 世界(源图)坐标 -> 屏幕坐标
       toScreen = (px2, py2) => ({ x: ox + px2 * s, y: oy + py2 * s });
     } else {
-      const cur = map.latLngToLayerPoint(toLL(0, 0));
-      const s = scaleAt(z);
-      toScreen = (px2, py2) => ({ x: cur.x + px2 * s, y: cur.y + py2 * s });
+      // 必须用 latLngToContainerPoint：它相对视口，包含 mapPane 的平移，
+      // 拖动地图时结果会变。用 latLngToLayerPoint（相对 pane）拖动后不变，
+      // 标点就会钉在屏幕上不跟着走 —— 这个坑已经踩过多次。
+      toScreen = (px2, py2) => map.latLngToContainerPoint(toLL(px2, py2));
     }
 
     // 标记在屏幕上的半径：11px 直径 -> 5.5px 半径
@@ -2318,47 +2319,34 @@ details.alt[open]>summary{margin-bottom:8px;}
 <p class="q" style="margin-bottom:10px">从零开始整理，一路以「数据可核对」为准：凡是能拿到官方原文的，一律不意译。</p>
 <ol class="log">
   <li class="now">
-    <span class="v">v0.12.0</span><span class="d">${VERSION_DATE}</span>
-    <div class="t">地图改用 Leaflet，瓦片化加载</div>
+    <span class="v">v0.13.7</span><span class="d">${VERSION_DATE}</span>
+    <div class="t">地图改用 Leaflet + 瓦片化加载，标点改用 canvas 渲染</div>
     <ul>
-      <li><b>进入页面不再下载整张 5.7MB 底图</b>：改为切瓦片按需加载，首屏底图从 5750 KB 降到约 246 KB（<b>减少约 95%</b>）</li>
-      <li>缩放时只取当前视野的瓦片，不再整张位图重绘 —— 原先每次缩放都卡，现在缩放几乎无延迟</li>
-      <li>三层地图各自独立切片，切换图层只加载该层的网格，不预载另两层</li>
-      <li>Leaflet 1.9.4 已本地化到 <code>assets/vendor/</code>，不依赖外部 CDN（jsdelivr 在国内不可达）</li>
-      <li>标记、地名、进度、搜索、URL 定位、导入导出等原有功能全部保留</li>
-      <li>瓦片由 <code>tools/make-tiles.py</code> 生成，改底图后重跑即可</li>
-      <li><b>关卡标点改用 canvas 渲染</b>：920 个 DOM 降到 0（总节点 2401 → 1479）。
-        每个点原本带三层投影和径向渐变，缩放时浏览器逐个光栅化，是卡顿主因；
-        现在一次绘制完成，重绘耗时降至 1ms 以内</li>
-      <li>点击与悬停改为坐标命中检测（命中半径 11px），区分拖动与点击（位移 &lt;4px 算点击）</li>
-      <li>缩放动画期间按 <b>190ms</b> 缓动逐帧重画，标点在起点与终点之间插值，与底图同步缩放</li>
-      <li>canvas 设 <code>pointer-events:none</code> 并置于地图之上（z-index 800），
-        不拦截 Leaflet 的拖拽与滚轮</li>
-      <li>修：<b>点击标点后地图会跳一下</b> —— 原来是「先平滑移到几何中心，动画结束再瞬时补偏移」
-        两段拼接；现改为一次性算出带面板偏移的最终中心，单次动画到位</li>
-      <li>清理：删除手写地图引擎的残留 —— 未使用的 <code>ACTS</code>、<code>fromLL</code>，
-        <code>syncPanelOffset</code> 里恒为 0 的死变量，<code>#stage</code> 上已被 Leaflet
-        接管的光标/拖拽样式，以及若干描述旧方案的过时注释</li>
+      <li><b>不再下载整张 5.7MB 底图</b>：改为切瓦片按需加载，首屏底图 5750 KB → 约 246 KB（<b>减少约 95%</b>）。
+        三层地图各自独立切片，换层只加载该层网格</li>
+      <li><b>关卡标点改用 canvas 渲染</b>：920 个 DOM 全部移除（总节点 2401 → 1479）。
+        原先每个点带三层投影与径向渐变，缩放时浏览器逐个光栅化，是卡顿主因；
+        现在一次绘制完成，重绘耗时 1ms 以内</li>
+      <li>点击与悬停改为坐标命中检测，区分拖动与点击（位移 &lt;4px 才算点击）；
+        缩放动画按 <b>190ms</b> 缓动逐帧插值，标点与底图同步缩放</li>
+      <li>Leaflet 1.9.4 本地化到 <code>assets/vendor/</code>，不依赖外部 CDN（jsdelivr 在国内不可达）；
+        瓦片由 <code>tools/make-tiles.py</code> 生成，改底图后重跑即可</li>
+      <li>修：<b>小比例时地图与标点错位</b> —— 瓦片原先按图片宽高比缩了行数（如 16×14），
+        而 Leaflet 认为一个瓦片覆盖等宽等高的世界方块，基准不同导致垂直偏移。
+        改为正方形网格 n×n、每块取正方形源区域，实测各层级误差均为 0px</li>
+      <li>修：<b>拖动后再缩放标点乱飞 / 位置偏移</b> —— 覆盖层原先挂在 <code>mapPane</code> 上做变换，
+        而 mapPane 本身已被 Leaflet 施加平移，等于平移算了两遍。现挂回 <code>overlayPane</code></li>
+      <li>修：<b>缩放时地图突变</b> —— <code>zoomSnap</code> 原为 0.25，中间态拿相邻层级瓦片拉伸显示，
+        跨过整数边界时整片换图。改为整数级缩放（每级 2 倍）</li>
+      <li>修：<b>点击标点后地图会跳一下</b> —— 原是「先平滑移到几何中心，动画结束再瞬时补偏移」
+        两段拼接；现一次性算出带面板偏移的最终中心，单次动画到位</li>
       <li>修：<b>点击标点会把地图缩到最小</b> —— 选关时传的仍是旧 CSS 缩放倍率（约 0.95），
         被当成 Leaflet 的 zoom 级别；现改为保持当前级别，过远时拉到 z3</li>
-      <li>修：<b>小比例时地图与标点错位</b> —— 瓦片原来按图片宽高比缩了行数（如 16x14），
-        而 Leaflet 认为一个瓦片覆盖等宽等高的世界方块，两者基准不同导致垂直偏移。
-        改为正方形网格 n×n、每块取正方形源区域；实测各层级瓦片与标点误差均为 0px</li>
-      <li>修：<b>缩放时地图突变</b> —— <code>zoomSnap</code> 原为 0.25，中间态拿相邻层级瓦片
-        拉伸显示，跨过整数边界时整片换图。改为整数级缩放（每级 2 倍）</li>
-      <li>修：<b>标点位置不再偏移、拖动后再缩放不会乱飞</b> —— 原先覆盖层挂在 <code>mapPane</code>
-        上做变换，而 mapPane 本身已被 Leaflet 施加平移，等于把平移算了两遍。
-        现挂回 <code>overlayPane</code>（自身 transform 恒为 none，跟随 mapPane 移动），
-        只按层坐标缩放内容；实测各缩放级别与拖动后误差均为 0px</li>
-      <li>修：首屏三层 920 个标点全部显示 —— <code>setLayer</code> 里的过滤在标记创建前执行等于空跑，
-        现改为建完标记后再过滤一次</li>
-      <li>修：拖动地图时标点不跟随 —— 覆盖层挂在 <code>mapPane</code> 上，
-        平移由它的 transform 带动，不再重复计算</li>
-      <li>修：缩到整图时卡顿 —— 920 个点各带三层投影与渐变，光栅化开销大；
-        现在 <b>z&lt;2 时降级为纯色圆点</b>，放大后恢复完整样式</li>
-      <li>修：缩放时标点不再「先跳过去」——给它加上 Leaflet 的 <code>leaflet-zoom-animated</code> 类，
-        过渡曲线与瓦片完全一致（<code>transform .25s cubic-bezier(0,0,.25,1)</code>）；
-        该过渡只在缩放期间开启，拖动时关闭以免拖尾</li>
+      <li>修：首屏三层 920 个标点全部显示（图层过滤在标记创建前空跑）；
+        拖动时标点不跟随；缩到整图时卡顿（现 z&lt;2 降级为纯色圆点）</li>
+      <li>清理：删除手写地图引擎的全部残留 —— <code>ACTS</code>、<code>fromLL</code>、
+        <code>syncPanelOffset</code> 中恒为 0 的死变量、<code>#stage</code> 上已被 Leaflet 接管的光标样式，
+        以及若干描述旧方案的过时注释</li>
     </ul>
   </li>
   <li>
