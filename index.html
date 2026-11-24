@@ -119,10 +119,11 @@ header > .iconbtn{flex-shrink:0;}
 #langLabel{font-size:10.5px;letter-spacing:.02em;}
 
 /* ---------- map ---------- */
-#stage{position:fixed;inset:var(--h) 0 0 0;overflow:hidden;cursor:grab;background:#0d1220;touch-action:none;
+/* 光标、touch-action、拖拽态都由 Leaflet 的 leaflet-container / leaflet-grab 类管理，
+   这里只负责定位与禁止文字选中。 */
+#stage{position:fixed;inset:var(--h) 0 0 0;overflow:hidden;background:#0d1220;
   user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;}
 #stage,#stage *{user-select:none;-webkit-user-select:none;}
-#stage.dragging{cursor:grabbing;}
 #map{position:absolute;inset:0;background:#0d1220;}
 /* 底图瓦片的观感与原整图保持一致 */
 #map .leaflet-tile{filter:saturate(1.05) brightness(1.04);}
@@ -1014,7 +1015,6 @@ details.alt[open]>summary{margin-bottom:8px;}
   // 平台名 / 摇杆名按当前语言取
   const P = k => { const p = PLATS[k]; return isEN() ? { ...p, cn: p.en, move: p.enMove } : p; };
   const unpack = s => String(s).replace(/([A-Z])(\d+)/g, (_, k, n) => k.repeat(+n));
-  const ACTS = "XCVBF";
 
   function segments(str){
     const out = [];
@@ -1378,7 +1378,6 @@ details.alt[open]>summary{margin-bottom:8px;}
   // 自定义 CRS 的 y 已经随像素向下增长，所以这里不再翻转 ——
   // 翻了会得到负瓦片号（z4/0_-2.jpg），那是取不到图的。
   const toLL = (px, py) => [py, px];
-  const fromLL = ll => ({ px: ll.lng, py: ll.lat });
 
   // CRS.Simple 默认 1 个 latlng 单位 = 1 个屏幕像素，
   // 而我们的坐标单位是源图像素（最宽 6400），这样 z0 时整图会被放大 25 倍，
@@ -1469,18 +1468,15 @@ details.alt[open]>summary{margin-bottom:8px;}
   }
 
   // 侧栏/面板展开时，把地图中心往左偏，避免被面板盖住
+  // 关卡面板展开时占住右侧一部分，把地图中心往左让，避免选中的关卡被面板盖住。
   function syncPanelOffset(){
     if (!map) return;
     const panelOpen = panel.classList.contains("open") && stage.clientWidth > 820;
-    const idxOpen = document.getElementById("index").classList.contains("open") && stage.clientWidth > 820;
-    const dx = panelOpen ? 210 : 0;
-    const dy = idxOpen ? 0 : 0;
-    if (dx) map.panBy([dx / 2, dy], { animate: false });
+    if (panelOpen) map.panBy([105, 0], { animate: false });
   }
 
-  // 标记与地名跟着 Leaflet 的视图变化重排。
-  // 都挂在 Leaflet 的 overlayPane 里，这样能复用它的平移/缩放容器，
-  // 但尺寸由我们自己按当前 zoom 反算，保持屏幕上恒定大小。
+  // 标记与地名都挂在 overlayPane 里（随 mapPane 一起平移），
+  // 尺寸按当前 zoom 反算，保持屏幕上恒定大小。
   let mkLayer = null, lbLayer = null;
 
   function applyView(){
@@ -1952,7 +1948,7 @@ details.alt[open]>summary{margin-bottom:8px;}
   document.addEventListener("keydown", e => { if (e.key === "Escape") openAbout(false); });
 
   /* ---------- 关于：数据来源 · 版本记录 ---------- */
-  const VERSION = "0.12.5";
+  const VERSION = "0.12.6";
   const VERSION_DATE = "2026-11-19";
 
   function colophonHTML(){
@@ -2136,6 +2132,9 @@ details.alt[open]>summary{margin-bottom:8px;}
       <li>Leaflet 1.9.4 已本地化到 <code>assets/vendor/</code>，不依赖外部 CDN（jsdelivr 在国内不可达）</li>
       <li>标记、地名、进度、搜索、URL 定位、导入导出等原有功能全部保留</li>
       <li>瓦片由 <code>tools/make-tiles.py</code> 生成，改底图后重跑即可</li>
+      <li>清理：删除手写地图引擎的残留 —— 未使用的 <code>ACTS</code>、<code>fromLL</code>，
+        <code>syncPanelOffset</code> 里恒为 0 的死变量，<code>#stage</code> 上已被 Leaflet
+        接管的光标/拖拽样式，以及若干描述旧方案的过时注释</li>
       <li>修：<b>点击标点会把地图缩到最小</b> —— 选关时传的仍是旧 CSS 缩放倍率（约 0.95），
         被当成 Leaflet 的 zoom 级别；现改为保持当前级别，过远时拉到 z3</li>
       <li>修：<b>小比例时地图与标点错位</b> —— 瓦片原来按图片宽高比缩了行数（如 16x14），
