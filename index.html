@@ -2340,6 +2340,9 @@ details.alt[open]>summary{margin-bottom:8px;}
         现在一次绘制完成，重绘耗时 1ms 以内</li>
       <li>点击与悬停改为坐标命中检测，区分拖动与点击（位移 &lt;4px 才算点击）；
         缩放动画按 <b>190ms</b> 缓动逐帧插值，标点与底图同步缩放</li>
+      <li>修：z0 层级瓦片原为 1024px，但 Leaflet 按 <code>tileSize=256</code> 排版，
+        实际被压缩显示 —— 多下载 140KB 却看不出区别。现统一为 256×256，
+        z0 体积 168KB → <b>25KB</b></li>
       <li>Leaflet 1.9.4 本地化到 <code>assets/vendor/</code>，不依赖外部 CDN（jsdelivr 在国内不可达）；
         瓦片由 <code>tools/make-tiles.py</code> 生成，改底图后重跑即可</li>
       <li>修：<b>小比例时地图与标点错位</b> —— 瓦片原先按图片宽高比缩了行数（如 16×14），

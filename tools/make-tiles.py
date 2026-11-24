@@ -5,8 +5,8 @@
 为什么这么做：原先每层要一次性下载 ~5MB 的整图，且缩放时是整张位图重绘，
 两者都很重。切成瓦片后首屏只需十几张小图，缩放时按需取用。
 
-输出结构（Leaflet 的 CRS.Simple 惯例，z0 一块覆盖整图）：
-  assets/tiles/<layer>/0/0_0.jpg        1600x1400 的缩略图（首屏用）
+输出结构（对应 index.html 的自定义 CRS，z0 一块覆盖整图）：
+  assets/tiles/<layer>/0/0_0.jpg        256x256，整图缩略（首屏用）
   assets/tiles/<layer>/1/x_y.jpg        每块覆盖 3200x2800 源像素
   ...
   assets/tiles/<layer>/<zmax>/x_y.jpg   最细一级
@@ -39,7 +39,6 @@ TILE = 256          # 输出瓦片边长
 ZMAX = 5
 QUALITY = 80        # JPEG 质量，兼顾体积与观感
 MAP_BG = (13, 18, 32)   # 与页面背景 #0d1220 一致，超出边界的部分用它填
-THUMB_SIZE = 1024   # z0 缩略图边长。首屏必加载，压到 ~150KB 让进入页面几乎是瞬间
 
 
 def tiles_for(z, W, H):
@@ -93,18 +92,18 @@ def make_layer(layer, filename):
                 tile = Image.new("RGB", (n, n), MAP_BG)
                 if R > L and B > T:
                     tile.paste(img.crop((L, T, R, B)), (L - round(left), T - round(top)))
-                # z0 直接给缩略图尺寸；其余 level 统一缩放到 256 见方
-                if z == 0:
-                    tile.thumbnail((THUMB_SIZE, THUMB_SIZE), Image.LANCZOS)
-                else:
-                    tile = tile.resize((TILE, TILE), Image.LANCZOS)
+                # 所有层级统一缩放到 256 见方。
+                # z0 曾经单独做成 1024px 缩略图，但 Leaflet 按 tileSize=256
+                # 排版，它会被压缩显示 —— 等于多下 140KB 却看不出任何区别。
+                tile = tile.resize((TILE, TILE), Image.LANCZOS)
 
                 buf = io.BytesIO()
                 # z0 是首屏唯一要等的图，单独压得更狠
                 # z5 只是对源图的放大、没有新增信息，压得紧一点也不损失观感，
                 # 而它占全部瓦片体积的大头
                 if z == 0:
-                    q = 72          # 首屏必加载，压得最狠
+                    # 首屏必加载，且只有 256px，可以放心用高质量
+                    q = 88
                 elif z >= 5:
                     q = 74          # 只是放大源图，无新增信息，体积却占大头
                 else:
