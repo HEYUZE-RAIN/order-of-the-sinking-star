@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>沉星之序 · 交互地图 | 920 个关卡位置与解法</title>
+<link rel="stylesheet" href="assets/vendor/leaflet/leaflet.css">
 <style>
 :root{
   --bg:#151a2b;
@@ -122,14 +123,18 @@ header > .iconbtn{flex-shrink:0;}
   user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;}
 #stage,#stage *{user-select:none;-webkit-user-select:none;}
 #stage.dragging{cursor:grabbing;}
-#world{
-  position:absolute;left:0;top:0;width:6400px;height:5600px;
-  transform-origin:0 0;will-change:transform;
-}
-#world img.base{
-  position:absolute;left:0;top:0;width:6400px;height:5600px;display:block;
-  user-select:none;pointer-events:none;-webkit-user-drag:none;
-  filter:saturate(1.05) brightness(1.04);
+#map{position:absolute;inset:0;background:#0d1220;}
+/* 底图瓦片的观感与原整图保持一致 */
+#map .leaflet-tile{filter:saturate(1.05) brightness(1.04);}
+/* Leaflet 默认控件与本页风格不符，全部隐藏，改用页面自己的按钮 */
+#map .leaflet-control-container{display:none;}
+/* 米制比例尺对游戏地图没有意义 */
+#map .leaflet-tile-container{will-change:auto;}
+/* 缩放动画期间：标记与地名跟随 transform 插值，与瓦片完全同步。
+   只过渡 transform，避免 --inv / --linv 变化也产生过渡导致尺寸抖动。 */
+#markers.zooming,#labels.zooming{
+  transition:transform .25s cubic-bezier(0,0,.25,1);
+  will-change:transform;
 }
 #labels{position:absolute;inset:0;pointer-events:none;overflow:visible;}
 .alab{
@@ -703,11 +708,9 @@ details.alt[open]>summary{margin-bottom:8px;}
 </header>
 
 <div id="stage">
-  <div id="world">
-    <img class="base" id="basemap" src="assets/maps/ground.jpg" alt="沉星之序主世界地图" data-i18n-alt="map.alt" draggable="false">
-    <div id="labels"></div>
-    <div id="markers"></div>
-  </div>
+  <!-- Leaflet 接管底图与视口：底图按 256px 瓦片分块加载，缩放时只取当前视野需要的块。
+       以前是一张 5MB 整图 + CSS transform 整体重绘，进入页面与缩放都很重。 -->
+  <div id="map"></div>
 </div>
 
 <div id="hud">
@@ -782,6 +785,7 @@ details.alt[open]>summary{margin-bottom:8px;}
 
 <div id="tip"></div>
 
+<script src="assets/vendor/leaflet/leaflet.js"></script>
 <script src="data/levels.js"></script>
 <script src="data/guides.js"></script>
 <script src="data/walkthrough.js"></script>
@@ -955,12 +959,11 @@ details.alt[open]>summary{margin-bottom:8px;}
     lsSet(LANG_KEY, l);
     applyLang();
     // 所有动态渲染都依赖 LANG，重绘一遍。
-    // buildLabels / buildMarkers 都是 append 语义，必须先清空，否则切一次语言叠一层。
-    labelsEl.innerHTML = "";
-    markers.innerHTML = "";
+    // buildLabels / buildMarkers 内部会先清空，不会叠加；
+    // 重建后必须再 applyView() 重算地名显隐，否则一个都不显示。
     buildLabels();
     buildMarkers();
-    applyView();       // 重建后要重新算地名的显隐，否则一个都不显示
+    onViewChange();
     buildIndex();
     if (state.sel){
       const l2 = byId(state.sel);
@@ -1336,10 +1339,6 @@ details.alt[open]>summary{margin-bottom:8px;}
 
   /* ---------- 构建 ---------- */
   const stage = document.getElementById("stage");
-  const world = document.getElementById("world");
-  const markers = document.getElementById("markers");
-  const basemap = document.getElementById("basemap");
-  const labelsEl = document.getElementById("labels");
   const panel = document.getElementById("panel");
   const phead = document.getElementById("phead");
   const pbody = document.getElementById("pbody");
@@ -1348,148 +1347,297 @@ details.alt[open]>summary{margin-bottom:8px;}
   const lbImg = lb.querySelector("img");
   lb.onclick = () => lb.classList.remove("on");
 
-  function buildMarkers(){
-    const frag = document.createDocumentFragment();
-    LEVELS.forEach(l => {
-      const b = document.createElement("button");
-      const u = urgencyOf(waitStats(l.s));
-      b.className = "mk g-" + groupOf(l.a) + (u ? " u-" + u.k : "");
-      b.style.left = l.px + "px";
-      b.style.top = l.py + "px";
-      b.dataset.id = l.id;
-      b.dataset.ly = l.ly;
-      b.title = l.t + (u ? ` · ${u.cn}` : "");
-      b.setAttribute("aria-label", l.t);
-      frag.appendChild(b);
-    });
-    markers.appendChild(frag);
-  }
+  /* ---------- 地图引擎（Leaflet） ----------
+     坐标系用 CRS.Simple：关卡数据里的 px/py 就是底图像素坐标，
+     直接当 Leaflet 的 latlng 用（y 轴向下，所以传给 L.latLng 时取 -py 翻一下，
+     再配合 L.CRS.Simple 的变换，视觉上与原来的像素坐标完全一致）。
 
-  function buildLabels(){
-    const frag = document.createDocumentFragment();
-    PINS.forEach(p => {
-      const d = document.createElement("div");
-      d.className = "alab" + (p.major ? " major" : "");
-      // 地名是 HTML 元素而非烧进底图的文字，所以能跟着语言切换
-      d.textContent = isEN() ? (p.en || p.cn) : p.cn;
-      d.title = isEN() ? `${p.cn} · ${LAYER_NAME(p.ly)}` : `${p.en} · ${LAYER_NAME(p.ly)}`;
-      d.dataset.ly = p.ly;
-      d.style.left = p.px + "px";
-      d.style.top = p.py + "px";
-      frag.appendChild(d);
-    });
-    labelsEl.appendChild(frag);
-  }
+     zoom 0 时 1 个瓦片覆盖整图；每加 1，瓦片数翻倍。
+     tiles 目录里的结构与此一致（见 tools/make-tiles.py）。 */
 
-  function applyView(){
-    world.style.transform = `translate(${state.tx}px,${state.ty}px) scale(${state.scale})`;
-    world.style.setProperty("--linv", Math.max(0.35, Math.min(8, 1 / state.scale)).toFixed(3));
-    // 让标记在屏幕上始终保持约 7px，缩小时不会被压成看不见的小点
-    const inv = Math.max(0.3, Math.min(7, 0.7 / state.scale));
-    markers.style.setProperty("--inv", inv.toFixed(3));
-    const minor = state.scale >= 0.5;
-    labelsEl.querySelectorAll(".alab").forEach(el => {
-      const on = el.dataset.ly === state.layer && (el.classList.contains("major") || minor);
-      el.classList.toggle("on", on);
-    });
+  const MAP_W = META.w, MAP_H = META.h;
+  // 源图 px -> Leaflet latlng。
+  // 自定义 CRS 的 y 已经随像素向下增长，所以这里不再翻转 ——
+  // 翻了会得到负瓦片号（z4/0_-2.jpg），那是取不到图的。
+  const toLL = (px, py) => [py, px];
+  const fromLL = ll => ({ px: ll.lng, py: ll.lat });
+
+  // CRS.Simple 默认 1 个 latlng 单位 = 1 个屏幕像素，
+  // 而我们的坐标单位是源图像素（最宽 6400），这样 z0 时整图会被放大 25 倍，
+  // 瓦片编号也全乱（会去请求不存在的 z0/12_10.jpg）。
+  // 用自定义 CRS 把「源图像素」换算成「Leaflet 世界坐标」：
+  // z0 时 1 个世界单位恰好 = 1 个瓦片像素，整图 256px。
+  // 这样 zoom 与 tiles 目录的层级就是一一对应的。
+  // transformation 的系数 = 「z0 时整图占多少像素」/ 「整图世界宽」
+  // 这里让 z0 的整图恰好铺满一个 256px 瓦片，与 tiles 目录层级严格对齐。
+  const K = 256 / MAP_W;
+  const CRS_MAP = L.extend({}, L.CRS.Simple, {
+    transformation: new L.Transformation(K, 0, K, 0),
+    scale: z => Math.pow(2, z),
+    zoom: s => Math.log(s) / Math.LN2,
+    infinite: true,
+  });
+
+  const map = L.map("map", {
+    crs: CRS_MAP,
+    minZoom: 0,
+    maxZoom: 5,
+    zoomSnap: 0.25,          // 允许平滑的中间缩放级别，滚轮不会一格一格跳
+    zoomDelta: 0.5,
+    wheelPxPerZoomLevel: 90,
+    zoomControl: false,
+    attributionControl: false,
+    maxBoundsViscosity: 0.85,
+    updateWhenZooming: false,
+    keepBuffer: 2,
+    fadeAnimation: true,
+    zoomAnimation: true,
+  });
+
+  // 世界坐标 = 源图像素，bounds 就是整张图的范围
+  const bounds = L.latLngBounds(toLL(0, MAP_H), toLL(MAP_W, 0));
+
+  let tileLayer = null;
+
+  function tileURL(ly){
+    // {s} 不用；z/x/y 交给 Leaflet 填
+    return `assets/tiles/${ly}/{z}/{x}_{y}.jpg`;
   }
 
   function setLayer(ly){
     if (!MAPS[ly]) return;
     const changed = state.layer !== ly;
     state.layer = ly;
-    if (basemap.getAttribute("src") !== MAPS[ly].img){
-      basemap.src = MAPS[ly].img;
-    }
-    basemap.alt = isEN() ? `Order of the Sinking Star ${LAYER_NAME(ly)} map` : `沉星之序${MAPS[ly].cn}地图`;
+
+    if (tileLayer) map.removeLayer(tileLayer);
+    tileLayer = L.tileLayer(tileURL(ly), {
+      tileSize: 256,
+      minZoom: 0,
+      maxZoom: 5,
+      maxNativeZoom: 5,
+      maxBounds: bounds,
+      // 瓦片是有限集合，越界时不要向服务器要 404
+      bounds: bounds,
+      keepBuffer: 2,
+      // 先给个底色，避免瓦片到位前一片白
+      className: "basemap-tile",
+    }).addTo(map);
+
     document.querySelectorAll("#maptabs button").forEach(b => b.classList.toggle("on", b.dataset.layer === ly));
     applyFilter();
-    applyView();
-    // 索引只列当前层的关卡，换层要跟着重建
     if (changed) buildIndex();
   }
 
   function fit(){
-    const w = stage.clientWidth, h = stage.clientHeight;
-    const s = Math.min(w / META.w, h / META.h) * 0.985;
-    state.scale = s;
-    state.tx = (w - META.w * s) / 2;
-    state.ty = (h - META.h * s) / 2;
+    map.fitBounds(bounds, { padding: [8, 8], animate: false });
     applyView();
   }
 
-  function centerOn(px, py, s){
-    const w = stage.clientWidth, h = stage.clientHeight;
-    state.scale = s || Math.max(state.scale, 1.1);
-    const panelW = panel.classList.contains("open") && w > 820 ? 210 : 0;
-    state.tx = w / 2 - panelW - px * state.scale;
-    state.ty = h / 2 - py * state.scale;
-    world.style.transition = "transform .45s cubic-bezier(.3,.8,.3,1)";
-    applyView();
-    setTimeout(() => { world.style.transition = ""; }, 470);
+  function centerOn(px, py, z){
+    const targetZ = z != null ? z : Math.max(map.getZoom(), 2);
+    map.setView(toLL(px, py), targetZ, { animate: true, duration: 0.45 });
+    // 面板占了右侧一部分，把中心点往左挪，让选中的关卡落在可视区中央
+    setTimeout(syncPanelOffset, 460);
   }
 
-  /* ---------- 拖拽 / 缩放 ---------- */
-  let drag = null, pressMk = null;
-  stage.addEventListener("pointerdown", e => {
-    if (e.button !== 0) return;
-    // 阻止浏览器把拖图当成"选择文字"/"拖拽选中的文本"，否则拖一次地图会留下蓝色高亮，
-    // 下一次从高亮处按下会变成原生拖拽，地图就拖不动了。
-    e.preventDefault();
-    try{ const sel = window.getSelection(); if (sel && sel.rangeCount) sel.removeAllRanges(); }catch(err){}
-    // 指针捕获会把后续事件的 target 改成 stage，所以要在这里记住按下的关卡
-    pressMk = e.target.closest ? e.target.closest(".mk") : null;
-    drag = {x:e.clientX, y:e.clientY, tx:state.tx, ty:state.ty, moved:false};
-    stage.classList.add("dragging");
-    try{ stage.setPointerCapture(e.pointerId); }catch(err){}
-  });
-  stage.addEventListener("pointermove", e => {
-    if (!drag) return;
-    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
-    if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true;
-    if (!drag.moved) return;
-    state.tx = drag.tx + dx; state.ty = drag.ty + dy;
-    applyView();
-  });
-  stage.addEventListener("pointerup", () => {
-    const wasDrag = drag && drag.moved;
-    const mk = pressMk;
-    drag = null; pressMk = null;
-    stage.classList.remove("dragging");
-    if (!wasDrag && mk) openLevel(+mk.dataset.id, true);
-  });
-  stage.addEventListener("pointercancel", () => {
-    drag = null; pressMk = null; stage.classList.remove("dragging");
-  });
-  // 键盘（Tab + Enter）激活
-  markers.addEventListener("click", e => {
-    if (e.detail !== 0) return;
-    const mk = e.target.closest(".mk");
-    if (mk) openLevel(+mk.dataset.id, true);
-  });
-  stage.addEventListener("wheel", e => {
-    e.preventDefault();
-    const k = e.deltaY < 0 ? 1.12 : 1/1.12;
-    const ns = Math.max(0.14, Math.min(2.6, state.scale * k));
-    const r = ns / state.scale;
-    const box = stage.getBoundingClientRect();
-    const cx = e.clientX - box.left, cy = e.clientY - box.top;
-    state.tx = cx - (cx - state.tx) * r;
-    state.ty = cy - (cy - state.ty) * r;
-    state.scale = ns;
-    applyView();
-  }, {passive:false});
+  // 侧栏/面板展开时，把地图中心往左偏，避免被面板盖住
+  function syncPanelOffset(){
+    if (!map) return;
+    const panelOpen = panel.classList.contains("open") && stage.clientWidth > 820;
+    const idxOpen = document.getElementById("index").classList.contains("open") && stage.clientWidth > 820;
+    const dx = panelOpen ? 210 : 0;
+    const dy = idxOpen ? 0 : 0;
+    if (dx) map.panBy([dx / 2, dy], { animate: false });
+  }
 
-  document.getElementById("zin").onclick = () => {
-    const w = stage.clientWidth/2, h = stage.clientHeight/2;
-    const ns = Math.min(2.6, state.scale*1.3), r = ns/state.scale;
-    state.tx = w - (w - state.tx)*r; state.ty = h - (h - state.ty)*r; state.scale = ns; applyView();
-  };
-  document.getElementById("zout").onclick = () => {
-    const w = stage.clientWidth/2, h = stage.clientHeight/2;
-    const ns = Math.max(0.14, state.scale/1.3), r = ns/state.scale;
-    state.tx = w - (w - state.tx)*r; state.ty = h - (h - state.ty)*r; state.scale = ns; applyView();
-  };
+  // 标记与地名跟着 Leaflet 的视图变化重排。
+  // 都挂在 Leaflet 的 overlayPane 里，这样能复用它的平移/缩放容器，
+  // 但尺寸由我们自己按当前 zoom 反算，保持屏幕上恒定大小。
+  let mkLayer = null, lbLayer = null;
+
+  function applyView(){
+    if (!map) return;
+    const z = map.getZoom();
+    // 图层被 placeOverlay() 按 k 整体缩放了，标记/地名要反着缩回去保持屏幕恒定大小
+    const k = scaleAt(z);
+    // 元素最终宽度 = 自身宽 * k * inv，想要屏幕上恒定 11px 就得 inv = 1/k
+    const inv = 1 / k;
+    if (mkLayer) mkLayer.style.setProperty("--inv", inv.toFixed(4));
+    if (lbLayer) lbLayer.style.setProperty("--linv", inv.toFixed(4));
+    const minor = z >= 2.5;
+    if (lbLayer){
+      lbLayer.querySelectorAll(".alab").forEach(el => {
+        const on = el.dataset.ly === state.layer && (el.classList.contains("major") || minor);
+        el.classList.toggle("on", on);
+      });
+    }
+  }
+
+  function buildMarkers(){
+    if (!mkLayer){
+      mkLayer = document.createElement("div");
+      mkLayer.id = "markers";
+      // leaflet-zoom-animated：Leaflet 只给带这个类的元素加
+      // `transition: transform .25s`，缩放时才会逐帧插值。
+      // 少了它，zoomanim 设的终值会立刻生效，看起来就是「标点先跳过去、
+      // 地图再慢慢缩」。
+      mkLayer.className = "leaflet-pane mkpane leaflet-zoom-animated";
+    }
+    mkLayer.innerHTML = "";
+    const frag = document.createDocumentFragment();
+    LEVELS.forEach(l => {
+      const b = document.createElement("button");
+      const u = urgencyOf(waitStats(l.s));
+      b.className = "mk g-" + groupOf(l.a) + (u ? " u-" + u.k : "");
+      b.dataset.id = l.id;
+      b.dataset.ly = l.ly;
+      b.dataset.px = l.px;
+      b.dataset.py = l.py;
+      b.title = l.t + (u ? ` · ${u.cn}` : "");
+      b.setAttribute("aria-label", l.t);
+      frag.appendChild(b);
+    });
+    mkLayer.appendChild(frag);
+    positionMkLayer();
+  }
+
+  // 把 6400x5600 的「源图坐标系」映射到 Leaflet 的 overlayPane。
+  // overlayPane 用的是「层坐标」（已含平移，但缩放要自己处理），
+  // 所以对一个固定尺寸的 DOM 容器先按 zoom 缩放，再把原点对齐。
+  // 把 6400x5600 的「源图坐标系」映射到 Leaflet 的 mapPane。
+  //
+  // 为什么用 mapPane：缩放动画期间 Leaflet 给 mapPane 套一个逐帧插值的
+  // transform(_animateZoom)，而 overlayPane 只是它的子容器、自身不被插值。
+  // 挂 overlayPane 上的元素只能等 zoomend 一次性跳过去，就会出现「缩放完才移动」。
+  //
+  // 代价是 mapPane 缩放时子元素会被一起放大，所以标记/地名要按 1/k 反向缩放，
+  // 而且必须跟着动画逐帧更新 —— 见 onZoomAnim。
+  function placeOverlay(layer){
+    if (!layer || !map) return;
+    // 缩放动画进行中时，transform 由 onZoomAnim 交给 CSS transition 负责，
+    // 这里再写终值会把动画打断（元素直接跳到终点）。
+    if (zoomAnimating) return;
+    const pane = map.getPane("mapPane");
+    if (!pane.contains(layer)) pane.appendChild(layer);
+    layer.style.position = "absolute";
+    layer.style.left = "0";
+    layer.style.top = "0";
+    layer.style.width = MAP_W + "px";
+    layer.style.height = MAP_H + "px";
+    layer.style.transformOrigin = "0 0";
+    const k = scaleAt(map.getZoom());
+    const o = paneOrigin();
+    layer.style.transform = `translate(${o.x}px, ${o.y}px) scale(${k})`;
+  }
+
+  // 当前 zoom 对应的世界->屏幕倍率
+  function scaleAt(z){ return Math.pow(2, z) * (256 / MAP_W); }
+
+  // 覆盖层左上角（对应源图 0,0）在 mapPane 坐标系里的位置
+  function paneOrigin(){
+    return map.latLngToLayerPoint(toLL(0, 0)).subtract(map._getMapPanePos());
+  }
+
+  // Leaflet 在缩放动画的每一帧都会抛 zoomanim，这里带着目标层级的参数，
+  // 据此同步覆盖层，标记就能跟瓦片一起动，而不是等动画结束才跳。
+  // 标记/地名的 transition 只在缩放动画期间开启。
+  // 拖动时每帧都在改 translate，若一直挂着 transition 会「拖尾」不跟手。
+  let zoomAnimating = false;
+  function beginZoomAnim(){
+    if (zoomAnimating) return;
+    zoomAnimating = true;
+    if (mkLayer) mkLayer.classList.add("zooming");
+    if (lbLayer) lbLayer.classList.add("zooming");
+  }
+  function endZoomAnim(){
+    if (!zoomAnimating) return;
+    zoomAnimating = false;
+    if (mkLayer) mkLayer.classList.remove("zooming");
+    if (lbLayer) lbLayer.classList.remove("zooming");
+    // 动画期间 placeOverlay 是跳过状态，这里补一次精确对位，
+    // 保证终态与瓦片严丝合缝（也顺手修掉浮点误差的累计）。
+    positionMkLayer();
+    positionLbLayer();
+  }
+
+  function onZoomAnim(e){
+    if (!map || !mkLayer) return;
+    beginZoomAnim();
+    const z = e.zoom;
+    const k = scaleAt(z);
+    const o = zoomOrigin(e);
+    [mkLayer, lbLayer].forEach(layer => {
+      if (!layer) return;
+      layer.style.transform = `translate(${o.x}px, ${o.y}px) scale(${k})`;
+    });
+    // 反向缩放，让标记在屏幕上保持恒定大小（与瓦片同步逐帧变化）
+    const inv = 1 / k;
+    if (mkLayer) mkLayer.style.setProperty("--inv", inv.toFixed(4));
+    if (lbLayer) lbLayer.style.setProperty("--linv", inv.toFixed(4));
+  }
+
+  // zoomanim 事件里，Leaflet 用它自己的 _latLngToNewLayerPoint 计算动画目标位置，
+  // 这里复刻同样的换算，保证与瓦片完全一致。
+  function zoomOrigin(e){
+    const scale = map.getZoomScale(e.zoom, map.getZoom());
+    const offset = map._latLngToNewLayerPoint(toLL(0, 0), e.zoom, e.center)
+      .subtract(map._getMapPanePos().multiplyBy(scale));
+    return offset;
+  }
+
+  function positionMkLayer(){
+    if (!mkLayer) return;
+    placeOverlay(mkLayer);
+    mkLayer.querySelectorAll(".mk").forEach(el => {
+      el.style.left = el.dataset.px + "px";
+      el.style.top = el.dataset.py + "px";
+    });
+  }
+
+  // 每次视图变化：重排覆盖层，并同步标记尺寸
+  function onViewChange(){
+    positionMkLayer();
+    positionLbLayer();
+    applyView();
+  }
+
+  function positionLbLayer(){
+    if (!lbLayer) return;
+    placeOverlay(lbLayer);
+    lbLayer.querySelectorAll(".alab").forEach(el => {
+      el.style.left = el.dataset.px + "px";
+      el.style.top = el.dataset.py + "px";
+    });
+  }
+
+  function buildLabels(){
+    if (!lbLayer){
+      lbLayer = document.createElement("div");
+      lbLayer.id = "labels";
+      lbLayer.className = "leaflet-pane lbpane leaflet-zoom-animated";
+    }
+    lbLayer.innerHTML = "";
+    const frag = document.createDocumentFragment();
+    PINS.forEach(p => {
+      const el = document.createElement("div");
+      el.className = "alab" + (p.major ? " major" : "");
+      el.textContent = isEN() ? (p.en || p.cn) : p.cn;
+      el.title = isEN() ? `${p.cn} · ${LAYER_NAME(p.ly)}` : `${p.en} · ${LAYER_NAME(p.ly)}`;
+      el.dataset.ly = p.ly;
+      el.dataset.px = p.px;
+      el.dataset.py = p.py;
+      el.style.left = p.px + "px";
+      el.style.top = p.py + "px";
+      frag.appendChild(el);
+    });
+    lbLayer.appendChild(frag);
+    positionLbLayer();
+  }
+
+  // 滚轮交给 Leaflet 处理（它自带节流与瓦片调度），不再自己算 transform
+  document.getElementById("zin").onclick = () => map.zoomIn(0.5);
+  document.getElementById("zout").onclick = () => map.zoomOut(0.5);
+
   document.getElementById("btnFit").onclick = fit;
   // 语言切换：中英互切，记住选择
   document.getElementById("btnLang").onclick = () => setLang(isEN() ? "zh" : "en");
@@ -1497,20 +1645,39 @@ details.alt[open]>summary{margin-bottom:8px;}
   let rt = null;
   window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(fit, 150); });
 
+  /* ---------- 点标记选关 ---------- */
+  // 用事件委托绑在 stage 上：标记是动态重建的，绑在标记本身会在换语言/换层后失效。
+  // 同时要区分「拖动地图」和「点了一下」—— 拖完手松开不该跳转。
+  let mkDown = null;
+  stage.addEventListener("pointerdown", e => {
+    mkDown = e.target.closest && e.target.closest(".mk");
+  });
+  stage.addEventListener("pointerup", e => {
+    const mk = e.target.closest && e.target.closest(".mk");
+    if (mk && mk === mkDown) openLevel(+mk.dataset.id, true);
+    mkDown = null;
+  });
+  // 键盘（Tab + Enter）激活
+  stage.addEventListener("click", e => {
+    if (e.detail !== 0) return;
+    const mk = e.target.closest(".mk");
+    if (mk) openLevel(+mk.dataset.id, true);
+  });
+
   /* ---------- 悬浮提示 ---------- */
   const tip = document.getElementById("tip");
-  markers.addEventListener("mouseover", e => {
+  stage.addEventListener("mouseover", e => {
     const mk = e.target.closest(".mk");
     if (!mk) return;
     const l = byId(+mk.dataset.id);
     tip.innerHTML = `<b>${esc(l.t)}</b><i>${esc(AR(l.a))} · ${LAYER_NAME(l.ly)} · #${pad(l.id)}</i>`;
     tip.classList.add("on");
   });
-  markers.addEventListener("mousemove", e => {
+  stage.addEventListener("mousemove", e => {
     tip.style.left = e.clientX + "px";
     tip.style.top = e.clientY + "px";
   });
-  markers.addEventListener("mouseout", e => {
+  stage.addEventListener("mouseout", e => {
     if (e.target.closest(".mk")) tip.classList.remove("on");
   });
 
@@ -1751,7 +1918,7 @@ details.alt[open]>summary{margin-bottom:8px;}
   document.addEventListener("keydown", e => { if (e.key === "Escape") openAbout(false); });
 
   /* ---------- 关于：数据来源 · 版本记录 ---------- */
-  const VERSION = "0.11.8";
+  const VERSION = "0.12.1";
   const VERSION_DATE = "2026-11-19";
 
   function colophonHTML(){
@@ -1926,7 +2093,22 @@ details.alt[open]>summary{margin-bottom:8px;}
 <p class="q" style="margin-bottom:10px">从零开始整理，一路以「数据可核对」为准：凡是能拿到官方原文的，一律不意译。</p>
 <ol class="log">
   <li class="now">
-    <span class="v">v0.11.8</span><span class="d">${VERSION_DATE}</span>
+    <span class="v">v0.12.0</span><span class="d">${VERSION_DATE}</span>
+    <div class="t">地图改用 Leaflet，瓦片化加载</div>
+    <ul>
+      <li><b>进入页面不再下载整张 5.7MB 底图</b>：改为切瓦片按需加载，首屏底图从 5750 KB 降到约 246 KB（<b>减少约 95%</b>）</li>
+      <li>缩放时只取当前视野的瓦片，不再整张位图重绘 —— 原先每次缩放都卡，现在缩放几乎无延迟</li>
+      <li>三层地图各自独立切片，切换图层只加载该层的网格，不预载另两层</li>
+      <li>Leaflet 1.9.4 已本地化到 <code>assets/vendor/</code>，不依赖外部 CDN（jsdelivr 在国内不可达）</li>
+      <li>标记、地名、进度、搜索、URL 定位、导入导出等原有功能全部保留</li>
+      <li>瓦片由 <code>tools/make-tiles.py</code> 生成，改底图后重跑即可</li>
+      <li>修：缩放时标点不再「先跳过去」——给它加上 Leaflet 的 <code>leaflet-zoom-animated</code> 类，
+        过渡曲线与瓦片完全一致（<code>transform .25s cubic-bezier(0,0,.25,1)</code>）；
+        该过渡只在缩放期间开启，拖动时关闭以免拖尾</li>
+    </ul>
+  </li>
+  <li>
+    <span class="v">v0.11.8</span><span class="d">2026-11-24</span>
     <div class="t">修复进度保存失败却无提示</div>
     <ul>
       <li>用户反馈：标记已通过的关卡刷新后复位。<b>排查确认两个原因</b></li>
@@ -2852,8 +3034,16 @@ level and solution data from <a href="https://github.com/joric/ootss" target="_b
   /* ---------- 启动 ---------- */
   load();
   applyLang();          // 按浏览器语言或上次选择，先把静态文案定下来
-  buildMarkers();
-  buildLabels();
+
+  // zoomanim 在缩放动画的每一帧都会触发，用来逐帧同步覆盖层，
+  // 这样标记与瓦片是「一起动」，而不是等动画结束才跳过去。
+  map.on("zoomanim", onZoomAnim);
+  map.on("zoomend", endZoomAnim);
+  map.on("zoom zoom move moveend viewreset", onViewChange);
+  // 允许稍微拖出边界一点，但不要用 pad 太大 —— pad 会连带限制可缩放的层级，
+  // 之前 0.15 把初始视图压到了 z1.5，地图只占屏幕中间一小块。
+  map.setMaxBounds(bounds.pad(0.02));
+
   buildIndex();
   refreshProgress();
 
@@ -2863,8 +3053,16 @@ level and solution data from <a href="https://github.com/joric/ootss" target="_b
     if (m) b.querySelector("b").textContent = m.n;
     b.onclick = () => setLayer(b.dataset.layer);
   });
+
   setLayer(state.layer);
-  fit();
+
+  // 顺序很重要：先给 map 定好中心与缩放，再建标记与标签。
+  // 否则 positionMkLayer() 里的 latLngToLayerPoint 会抛
+  // "Set map center and zoom first."，标记和地名都挂不上去。
+  map.fitBounds(bounds, { padding: [8, 8], animate: false });
+  buildMarkers();
+  buildLabels();
+  onViewChange();
 
 
   const hash = decodeURIComponent(location.hash.replace("#",""));
