@@ -1522,53 +1522,41 @@ details.alt[open]>summary{margin-bottom:8px;}
     positionMkLayer();
   }
 
-  // 把 6400x5600 的「源图坐标系」映射到 Leaflet 的 overlayPane。
-  // overlayPane 用的是「层坐标」（已含平移，但缩放要自己处理），
-  // 所以对一个固定尺寸的 DOM 容器先按 zoom 缩放，再把原点对齐。
-  // 把 6400x5600 的「源图坐标系」映射到 Leaflet 的 mapPane。
+  // 覆盖层定位。
   //
-  // 为什么用 mapPane：缩放动画期间 Leaflet 给 mapPane 套一个逐帧插值的
-  // transform(_animateZoom)，而 overlayPane 只是它的子容器、自身不被插值。
-  // 挂 overlayPane 上的元素只能等 zoomend 一次性跳过去，就会出现「缩放完才移动」。
-  //
-  // 代价是 mapPane 缩放时子元素会被一起放大，所以标记/地名要按 1/k 反向缩放，
-  // 而且必须跟着动画逐帧更新 —— 见 onZoomAnim。
+  // 结论（实测得出）：只有 mapPane 会被 Leaflet 施加 transform（平移+缩放），
+  // 而 overlayPane 是它的子元素、自身 transform 恒为 none。
+  // 因此把覆盖层放进 overlayPane 后：
+  //   · 拖动地图 —— mapPane 动，overlayPane 连同子元素自动跟随，不需要我们插手
+  //   · 缩放地图 —— 需要我们自己按目标层级缩放内容
+  // 之前挂在 mapPane 上又减 _getMapPanePos 做补偿，等于把平移算了两遍，
+  // 拖过之后再缩放就会「乱飞」；位置也因此在非整数级别对不齐。
   function placeOverlay(layer){
     if (!layer || !map) return;
-    // 缩放动画进行中时，transform 由 onZoomAnim 交给 CSS transition 负责，
-    // 这里再写终值会把动画打断（元素直接跳到终点）。
-    if (zoomAnimating) return;
-    const pane = map.getPane("mapPane");
+    if (zoomAnimating) return;           // 动画中交给 onZoomAnim
+    const pane = map.getPane("overlayPane");
     if (!pane.contains(layer)) pane.appendChild(layer);
+
+    // latLngToLayerPoint 给的就是 overlayPane 局部坐标系里的位置，直接用
+    const o = map.latLngToLayerPoint(toLL(0, 0));
+    const k = scaleAt(map.getZoom());
+
     layer.style.position = "absolute";
     layer.style.left = "0";
     layer.style.top = "0";
     layer.style.width = MAP_W + "px";
     layer.style.height = MAP_H + "px";
     layer.style.transformOrigin = "0 0";
-    const k = scaleAt(map.getZoom());
-    const o = paneOrigin();
     layer.style.transform = `translate(${o.x}px, ${o.y}px) scale(${k})`;
   }
 
   // 当前 zoom 对应的世界->屏幕倍率
   function scaleAt(z){ return Math.pow(2, z) * (256 / MAP_W); }
 
-  // 覆盖层左上角（对应源图 0,0）在 mapPane 坐标系里的位置。
-  //
-  // mapPane 自身的 transform 就是 _getMapPanePos() 的平移，
-  // 所以挂在它里面的子元素要用「不含 pane 平移」的层坐标 —— 也就是
-  // latLngToLayerPoint 的结果再减掉 pane 偏移。
-  // 注意：拖动地图时 Leaflet 改的是 mapPane 的 transform，子元素跟着一起动，
-  // 不需要我们重新算；只有 zoom 变化才需要重排（尺寸变了）。
-  function paneOrigin(){
-    return map.latLngToLayerPoint(toLL(0, 0)).subtract(map._getMapPanePos());
-  }
-
-  // Leaflet 在缩放动画的每一帧都会抛 zoomanim，这里带着目标层级的参数，
-  // 据此同步覆盖层，标记就能跟瓦片一起动，而不是等动画结束才跳。
-  // 标记/地名的 transition 只在缩放动画期间开启。
-  // 拖动时每帧都在改 translate，若一直挂着 transition 会「拖尾」不跟手。
+  /* ---------- 缩放动画期间同步 ----------
+     Leaflet 在缩放动画中每一帧抛 zoomanim，事件里带着目标层级 e.zoom 和目标中心。
+     我们据此把覆盖层设到「动画终点」的变换，再靠 .zooming 上的 CSS transition
+     让浏览器按同一缓动曲线插值 —— 与瓦片完全同步，不会「先跳过去」。 */
   let zoomAnimating = false;
   function beginZoomAnim(){
     if (zoomAnimating) return;
@@ -1581,8 +1569,8 @@ details.alt[open]>summary{margin-bottom:8px;}
     zoomAnimating = false;
     if (mkLayer) mkLayer.classList.remove("zooming");
     if (lbLayer) lbLayer.classList.remove("zooming");
-    // 动画期间 placeOverlay 是跳过状态，这里补一次精确对位，
-    // 保证终态与瓦片严丝合缝（也顺手修掉浮点误差的累计）。
+    // 动画期间 placeOverlay 是跳过状态，这里补一次精确对位，消除浮点误差
+    lastZoomForLayout = map.getZoom();
     positionMkLayer();
     positionLbLayer();
   }
@@ -1591,25 +1579,23 @@ details.alt[open]>summary{margin-bottom:8px;}
     if (!map || !mkLayer) return;
     beginZoomAnim();
     const z = e.zoom;
+    // 目标层级的原点：用 Leaflet 自己的换算，保证与瓦片一致
+    const o = map._latLngToNewLayerPoint(toLL(0, 0), z, e.center);
     const k = scaleAt(z);
-    const o = zoomOrigin(e);
     [mkLayer, lbLayer].forEach(layer => {
       if (!layer) return;
+      layer.style.position = "absolute";
+      layer.style.left = "0";
+      layer.style.top = "0";
+      layer.style.width = MAP_W + "px";
+      layer.style.height = MAP_H + "px";
+      layer.style.transformOrigin = "0 0";
       layer.style.transform = `translate(${o.x}px, ${o.y}px) scale(${k})`;
     });
-    // 反向缩放，让标记在屏幕上保持恒定大小（与瓦片同步逐帧变化）
+    // 反向缩放，让标记在屏幕上保持恒定大小
     const inv = 1 / k;
     if (mkLayer) mkLayer.style.setProperty("--inv", inv.toFixed(4));
     if (lbLayer) lbLayer.style.setProperty("--linv", inv.toFixed(4));
-  }
-
-  // zoomanim 事件里，Leaflet 用它自己的 _latLngToNewLayerPoint 计算动画目标位置，
-  // 这里复刻同样的换算，保证与瓦片完全一致。
-  function zoomOrigin(e){
-    const scale = map.getZoomScale(e.zoom, map.getZoom());
-    const offset = map._latLngToNewLayerPoint(toLL(0, 0), e.zoom, e.center)
-      .subtract(map._getMapPanePos().multiplyBy(scale));
-    return offset;
   }
 
   function positionMkLayer(){
@@ -1619,7 +1605,6 @@ details.alt[open]>summary{margin-bottom:8px;}
     // 它们是固定不变的源图坐标，每次视图变化重设 920 次是纯浪费。
   }
 
-  // 每次视图变化：重排覆盖层，并同步标记尺寸
   // 只在地图层级变化时重排覆盖层。
   // 拖动（move）时 mapPane 的 transform 已经带着子元素一起走了，
   // 再对 920 个节点逐个写 style 纯属浪费 —— 那正是小比例下拖动/缩放卡顿的来源。
@@ -1948,7 +1933,7 @@ details.alt[open]>summary{margin-bottom:8px;}
   document.addEventListener("keydown", e => { if (e.key === "Escape") openAbout(false); });
 
   /* ---------- 关于：数据来源 · 版本记录 ---------- */
-  const VERSION = "0.12.2";
+  const VERSION = "0.12.3";
   const VERSION_DATE = "2026-11-19";
 
   function colophonHTML(){
@@ -2132,6 +2117,10 @@ details.alt[open]>summary{margin-bottom:8px;}
       <li>Leaflet 1.9.4 已本地化到 <code>assets/vendor/</code>，不依赖外部 CDN（jsdelivr 在国内不可达）</li>
       <li>标记、地名、进度、搜索、URL 定位、导入导出等原有功能全部保留</li>
       <li>瓦片由 <code>tools/make-tiles.py</code> 生成，改底图后重跑即可</li>
+      <li>修：<b>标点位置不再偏移、拖动后再缩放不会乱飞</b> —— 原先覆盖层挂在 <code>mapPane</code>
+        上做变换，而 mapPane 本身已被 Leaflet 施加平移，等于把平移算了两遍。
+        现挂回 <code>overlayPane</code>（自身 transform 恒为 none，跟随 mapPane 移动），
+        只按层坐标缩放内容；实测各缩放级别与拖动后误差均为 0px</li>
       <li>修：首屏三层 920 个标点全部显示 —— <code>setLayer</code> 里的过滤在标记创建前执行等于空跑，
         现改为建完标记后再过滤一次</li>
       <li>修：拖动地图时标点不跟随 —— 覆盖层挂在 <code>mapPane</code> 上，
