@@ -166,17 +166,23 @@ body.en .alab.major{font-size:12.5px;letter-spacing:0;}
 #markers{position:absolute;inset:0;--inv:1;}
 .mk{
   position:absolute;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;
-  border-radius:50%;border:0;padding:0;cursor:pointer;transform:scale(var(--inv));
+  border-radius:50%;border:0;padding:0;cursor:pointer;
+  /* 用 transform 而不是改 box-shadow 来做尺寸，配合 translateZ(0) 让它独占合成层，
+     缩放时由 GPU 直接缩放贴图，不必每帧重新光栅化渐变与投影。 */
+  transform:translateZ(0) scale(var(--inv));
   /* 底色渐变给一点"球面"高光；三层投影 = 深色内圈压住底图 + 亮色外圈拉开对比 + 落影 */
   background:radial-gradient(circle at 34% 28%, #ffffffb0, #ffffff00 58%), var(--c);
   box-shadow:
     0 0 0 1.4px #05070ce0,
     0 0 0 2.9px #fbf6eaee,
     0 1px 5px 1px #000a;
-  transition:box-shadow .15s, filter .15s;
+  /* 只过渡 box-shadow。原先写了 filter，鼠标划过时 filter 会让整个元素
+     重新建图层，批量悬停时明显掉帧。 */
+  transition:box-shadow .15s;
+  contain:layout style;
 }
 .mk::after{content:"";position:absolute;inset:-6px;border-radius:50%;}
-.mk:hover{box-shadow:0 0 0 1.8px #05070c, 0 0 0 4px #f2eee5, 0 0 13px 3px var(--c);z-index:9;filter:brightness(1.15);}
+.mk:hover{box-shadow:0 0 0 1.8px #05070c, 0 0 0 4px #f2eee5, 0 0 13px 3px var(--c);z-index:9;}
 .mk.done{
   background:radial-gradient(circle at 34% 28%, #fffdf6cc, #ffffff00 58%), var(--accent);
   box-shadow:0 0 0 1.4px #1a1205, 0 0 0 2.9px #ffe7b6ee, 0 1px 5px 1px #000a;
@@ -1728,7 +1734,10 @@ details.alt[open]>summary{margin-bottom:8px;}
         const cx = ls.reduce((s,l)=>s+l.px,0)/ls.length;
         const cy = ls.reduce((s,l)=>s+l.py,0)/ls.length;
         const sp = spread(ls) || 300;
-        centerOn(cx, cy, Math.max(0.55, Math.min(1.8, 780 / sp)));
+        // sp 是区域在源图上的跨度（像素）。整图宽 6400 在 z 级显示为 256*2^z，
+        // 想让该区域铺满约 800px 视野，解出 z = log2(800*6400/(256*sp))。
+        const zFit = Math.log2(Math.max(1, 800 * MAP_W / (256 * sp)));
+        centerOn(cx, cy, Math.max(2, Math.min(5, Math.round(zFit))));
         applyFilter();
         return;
       }
@@ -1943,7 +1952,7 @@ details.alt[open]>summary{margin-bottom:8px;}
   document.addEventListener("keydown", e => { if (e.key === "Escape") openAbout(false); });
 
   /* ---------- 关于：数据来源 · 版本记录 ---------- */
-  const VERSION = "0.12.4";
+  const VERSION = "0.12.5";
   const VERSION_DATE = "2026-11-19";
 
   function colophonHTML(){
@@ -2127,6 +2136,8 @@ details.alt[open]>summary{margin-bottom:8px;}
       <li>Leaflet 1.9.4 已本地化到 <code>assets/vendor/</code>，不依赖外部 CDN（jsdelivr 在国内不可达）</li>
       <li>标记、地名、进度、搜索、URL 定位、导入导出等原有功能全部保留</li>
       <li>瓦片由 <code>tools/make-tiles.py</code> 生成，改底图后重跑即可</li>
+      <li>修：<b>点击标点会把地图缩到最小</b> —— 选关时传的仍是旧 CSS 缩放倍率（约 0.95），
+        被当成 Leaflet 的 zoom 级别；现改为保持当前级别，过远时拉到 z3</li>
       <li>修：<b>小比例时地图与标点错位</b> —— 瓦片原来按图片宽高比缩了行数（如 16x14），
         而 Leaflet 认为一个瓦片覆盖等宽等高的世界方块，两者基准不同导致垂直偏移。
         改为正方形网格 n×n、每块取正方形源区域；实测各层级瓦片与标点误差均为 0px</li>
@@ -2625,7 +2636,10 @@ level and solution data from <a href="https://github.com/joric/ootss" target="_b
     if (mk) mk.classList.add("sel");
     render(l);
     panel.classList.add("open");
-    if (fly) centerOn(l.px, l.py, Math.max(state.scale, 0.95));
+    // 保持用户当前缩放级别；太远时拉到 z3（能看清关卡所在格子的程度）。
+    // 旧参数 state.scale 是 CSS transform 时代的倍率，与 Leaflet 的 zoom 不是一套，
+    // 传进去会被当成 zoom≈1，于是每点一次就把地图缩到最小。
+    if (fly) centerOn(l.px, l.py, Math.max(map.getZoom(), 3));
     document.querySelectorAll(".ai.act").forEach(e => e.classList.remove("act"));
     const ai = document.querySelector(`.ai[data-id="${id}"]`);
     if (ai){ ai.classList.add("act"); ai.scrollIntoView({block:"nearest"}); }
