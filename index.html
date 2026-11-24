@@ -1741,8 +1741,9 @@ details.alt[open]>summary{margin-bottom:8px;}
   // 缩放动画期间的逐帧重画循环
   let zoomPaintRaf = null;
   let zoomFrom = null, zoomTo = null;   // 动画两端的世界->屏幕变换
-  // 缩放动画时长，与 Leaflet 的 zoomAnimation（250ms）一致
-  const ZOOM_ANIM_MS = 250;
+  // 缩放动画时长（ms）。Leaflet 自己的 zoomAnimation 是 250ms，
+  // 这里用 150ms 让标点略快一点跟到位，观感更跟手。
+  const ZOOM_ANIM_MS = 150;
 
   // 与 CSS cubic-bezier(0,0,.25,1) 等价的缓动，用手解三次贝塞尔近似
   function easeLeaflet(t){
@@ -2142,7 +2143,7 @@ details.alt[open]>summary{margin-bottom:8px;}
   document.addEventListener("keydown", e => { if (e.key === "Escape") openAbout(false); });
 
   /* ---------- 关于：数据来源 · 版本记录 ---------- */
-  const VERSION = "0.13.1";
+  const VERSION = "0.13.2";
   const VERSION_DATE = "2026-11-19";
 
   function colophonHTML(){
@@ -2330,8 +2331,7 @@ details.alt[open]>summary{margin-bottom:8px;}
         每个点原本带三层投影和径向渐变，缩放时浏览器逐个光栅化，是卡顿主因；
         现在一次绘制完成，重绘耗时降至 1ms 以内</li>
       <li>点击与悬停改为坐标命中检测（命中半径 11px），区分拖动与点击（位移 &lt;4px 算点击）</li>
-      <li>缩放动画期间按 <b>250ms</b> 缓动逐帧重画（与 Leaflet 的 zoomAnimation 时长一致），
-        标点在起点与终点之间插值，与底图同步缩放</li>
+      <li>缩放动画期间按 <b>150ms</b> 缓动逐帧重画，标点在起点与终点之间插值，与底图同步缩放</li>
       <li>canvas 设 <code>pointer-events:none</code> 并置于地图之上（z-index 800），
         不拦截 Leaflet 的拖拽与滚轮</li>
       <li>修：<b>点击标点后地图会跳一下</b> —— 原来是「先平滑移到几何中心，动画结束再瞬时补偏移」
