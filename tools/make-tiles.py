@@ -38,18 +38,20 @@ TILE = 256          # 输出瓦片边长
 # 再往上不会有更多细节（源图就那么大），所以停在 5。
 ZMAX = 5
 QUALITY = 80        # JPEG 质量，兼顾体积与观感
+MAP_BG = (13, 18, 32)   # 与页面背景 #0d1220 一致，超出边界的部分用它填
 THUMB_SIZE = 1024   # z0 缩略图边长。首屏必加载，压到 ~150KB 让进入页面几乎是瞬间
 
 
 def tiles_for(z, W, H):
-    """返回该 zoom 下的 (cols, rows)。z0 固定 1x1。"""
-    if z == 0:
-        return 1, 1
+    """返回该 zoom 下的 (cols, rows)。
+
+    必须是正方形网格 n x n（n = 2^z）。Leaflet 按 tileSize 等分整个视野，
+    若这里按图片宽高比缩减行数（比如 16x14），瓦片拼出来的整体高度
+    就和 Leaflet 算的不一致，标点与底图会整体错位 —— 缩得越小越明显。
+    每块覆盖的区域也不必是正方形，按 W/n、H/n 各自等分即可。
+    """
     n = 2 ** z
-    # 用整图比例决定行列数，避免出现只差几个像素的空行列
-    cols = n
-    rows = max(1, round(H / W * n))
-    return cols, rows
+    return n, n
 
 
 def make_layer(layer, filename):
@@ -66,8 +68,11 @@ def make_layer(layer, filename):
 
     for z in range(0, ZMAX + 1):
         cols, rows = tiles_for(z, W, H)
-        zw = W / cols
-        zh = H / rows
+        # 每块必须是「正方形」源区域：Leaflet 认为一个瓦片覆盖等宽等高的世界方形，
+        # 若按 W/cols、H/rows 取（不是正方形），缩放到 256x256 时图像会被压扁，
+        # 底部就会出现几十像素的错位 —— 这正是「小比例地图和标点不匹配」的原因。
+        span = W / cols
+        zw = zh = span
         zdir = os.path.join(out_root, str(z))
         os.makedirs(zdir, exist_ok=True)
 
@@ -77,8 +82,17 @@ def make_layer(layer, filename):
                 top = cy * zh
                 right = left + zw
                 bottom = top + zh
-                box = (round(left), round(top), round(right), round(bottom))
-                tile = img.crop(box)
+                # 因为图高 H < 宽 W，最下面一行会超出源图。
+                # 做法：先把这一格对应区域裁到源图范围内，再贴到正方形画布上，
+                # 超出部分用页面底色填 —— 不做越界 crop。
+                n = round(span)
+                L = max(0, min(round(left), W))
+                T = max(0, min(round(top), H))
+                R = max(L, min(round(right), W))
+                B = max(T, min(round(bottom), H))
+                tile = Image.new("RGB", (n, n), MAP_BG)
+                if R > L and B > T:
+                    tile.paste(img.crop((L, T, R, B)), (L - round(left), T - round(top)))
                 # z0 直接给缩略图尺寸；其余 level 统一缩放到 256 见方
                 if z == 0:
                     tile.thumbnail((THUMB_SIZE, THUMB_SIZE), Image.LANCZOS)

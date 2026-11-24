@@ -1394,9 +1394,13 @@ details.alt[open]>summary{margin-bottom:8px;}
     crs: CRS_MAP,
     minZoom: 0,
     maxZoom: 5,
-    zoomSnap: 0.25,          // 允许平滑的中间缩放级别，滚轮不会一格一格跳
-    zoomDelta: 0.5,
-    wheelPxPerZoomLevel: 90,
+    // 缩放必须落在整数级别。
+    // 瓦片只有整数层级，若允许 0.25 级这种中间态，Leaflet 会拿相邻层级的瓦片
+    // 拉伸显示，一旦跨过整数边界就整片换成另一层瓦片 —— 看上去就是「突变」。
+    // 每级 2 倍的变化幅度对这类全图浏览的地图是合适的。
+    zoomSnap: 1,
+    zoomDelta: 1,
+    wheelPxPerZoomLevel: 70,
     zoomControl: false,
     attributionControl: false,
     maxBoundsViscosity: 0.85,
@@ -1441,7 +1445,13 @@ details.alt[open]>summary{margin-bottom:8px;}
   }
 
   function fit(){
-    map.fitBounds(bounds, { padding: [8, 8], animate: false });
+    // 整数缩放下只能取整级：取「刚好铺满视口宽度」的那一级，
+    // 高度方向可能略超出，这是可以接受的（整图浏览时更想看全貌）。
+    // 以「宽度铺满」为准：整图 w=6400，z 级显示为 256*2^z px
+    const w = map.getSize().x;
+    let z = Math.floor(Math.log2(w / 256));
+    z = Math.max(map.getMinZoom(), Math.min(map.getMaxZoom(), z));
+    map.setView(bounds.getCenter(), z, { animate: false });
     applyView();
   }
 
@@ -1482,7 +1492,7 @@ details.alt[open]>summary{margin-bottom:8px;}
     const dense = z < 2;
     if (mkLayer) mkLayer.classList.toggle("dense", dense);
 
-    const minor = z >= 2.5;
+    const minor = z >= 3;
     if (lbLayer){
       lbLayer.querySelectorAll(".alab").forEach(el => {
         const on = el.dataset.ly === state.layer && (el.classList.contains("major") || minor);
@@ -1650,8 +1660,8 @@ details.alt[open]>summary{margin-bottom:8px;}
   }
 
   // 滚轮交给 Leaflet 处理（它自带节流与瓦片调度），不再自己算 transform
-  document.getElementById("zin").onclick = () => map.zoomIn(0.5);
-  document.getElementById("zout").onclick = () => map.zoomOut(0.5);
+  document.getElementById("zin").onclick = () => map.zoomIn(1);
+  document.getElementById("zout").onclick = () => map.zoomOut(1);
 
   document.getElementById("btnFit").onclick = fit;
   // 语言切换：中英互切，记住选择
@@ -1933,7 +1943,7 @@ details.alt[open]>summary{margin-bottom:8px;}
   document.addEventListener("keydown", e => { if (e.key === "Escape") openAbout(false); });
 
   /* ---------- 关于：数据来源 · 版本记录 ---------- */
-  const VERSION = "0.12.3";
+  const VERSION = "0.12.4";
   const VERSION_DATE = "2026-11-19";
 
   function colophonHTML(){
@@ -2117,6 +2127,11 @@ details.alt[open]>summary{margin-bottom:8px;}
       <li>Leaflet 1.9.4 已本地化到 <code>assets/vendor/</code>，不依赖外部 CDN（jsdelivr 在国内不可达）</li>
       <li>标记、地名、进度、搜索、URL 定位、导入导出等原有功能全部保留</li>
       <li>瓦片由 <code>tools/make-tiles.py</code> 生成，改底图后重跑即可</li>
+      <li>修：<b>小比例时地图与标点错位</b> —— 瓦片原来按图片宽高比缩了行数（如 16x14），
+        而 Leaflet 认为一个瓦片覆盖等宽等高的世界方块，两者基准不同导致垂直偏移。
+        改为正方形网格 n×n、每块取正方形源区域；实测各层级瓦片与标点误差均为 0px</li>
+      <li>修：<b>缩放时地图突变</b> —— <code>zoomSnap</code> 原为 0.25，中间态拿相邻层级瓦片
+        拉伸显示，跨过整数边界时整片换图。改为整数级缩放（每级 2 倍）</li>
       <li>修：<b>标点位置不再偏移、拖动后再缩放不会乱飞</b> —— 原先覆盖层挂在 <code>mapPane</code>
         上做变换，而 mapPane 本身已被 Leaflet 施加平移，等于把平移算了两遍。
         现挂回 <code>overlayPane</code>（自身 transform 恒为 none，跟随 mapPane 移动），
@@ -3084,7 +3099,7 @@ level and solution data from <a href="https://github.com/joric/ootss" target="_b
   // 顺序很重要：先给 map 定好中心与缩放，再建标记与标签。
   // 否则 positionMkLayer() 里的 latLngToLayerPoint 会抛
   // "Set map center and zoom first."，标记和地名都挂不上去。
-  map.fitBounds(bounds, { padding: [8, 8], animate: false });
+  fit();
   buildMarkers();
   buildLabels();
   // applyFilter 必须在标记建好之后再跑一次：
