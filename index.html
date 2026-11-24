@@ -136,15 +136,11 @@ header > .iconbtn{flex-shrink:0;}
    只过渡 transform，避免 --inv / --linv 变化也产生过渡导致尺寸抖动。 */
 /* 缩到整图铺满时（z<2），920 个标记挤在屏幕上，降级渲染：
    去掉多重投影与渐变高光，只保留纯色圆点。 */
-#markers.dense .mk{
-  background:var(--c);
-  box-shadow:0 0 0 1px #05070cc0;
-}
-#markers.dense .mk.done{
-  background:var(--accent);
-  box-shadow:0 0 0 1px #1a1205;
-}
-#markers.dense .mk::after{display:none;}
+/* 关卡点画在 canvas 上，铺满视口；只有悬停才切成指针 */
+/* 必须盖在 Leaflet 的 #map 之上：Leaflet 容器内部瓦片层 z-index 达 200，
+   而 canvas 与 #map 是兄弟节点，要用足够大的 z-index 才能压住整个容器。 */
+#stage>#markers{position:absolute;left:0;top:0;z-index:800;pointer-events:none;}
+#stage.mk-hot{cursor:pointer;}
 
 #markers.zooming,#labels.zooming{
   transition:transform .25s cubic-bezier(0,0,.25,1);
@@ -165,35 +161,6 @@ body.en .alab{font-size:11px;letter-spacing:0;padding:2px 6px;}
 body.en .alab.major{font-size:12.5px;letter-spacing:0;}
 .alab.on{display:block;}
 .alab.off{display:none!important;}
-#markers{position:absolute;inset:0;--inv:1;}
-.mk{
-  position:absolute;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;
-  border-radius:50%;border:0;padding:0;cursor:pointer;
-  /* 用 transform 而不是改 box-shadow 来做尺寸，配合 translateZ(0) 让它独占合成层，
-     缩放时由 GPU 直接缩放贴图，不必每帧重新光栅化渐变与投影。 */
-  transform:translateZ(0) scale(var(--inv));
-  /* 底色渐变给一点"球面"高光；三层投影 = 深色内圈压住底图 + 亮色外圈拉开对比 + 落影 */
-  background:radial-gradient(circle at 34% 28%, #ffffffb0, #ffffff00 58%), var(--c);
-  box-shadow:
-    0 0 0 1.4px #05070ce0,
-    0 0 0 2.9px #fbf6eaee,
-    0 1px 5px 1px #000a;
-  /* 只过渡 box-shadow。原先写了 filter，鼠标划过时 filter 会让整个元素
-     重新建图层，批量悬停时明显掉帧。 */
-  transition:box-shadow .15s;
-  contain:layout style;
-}
-.mk::after{content:"";position:absolute;inset:-6px;border-radius:50%;}
-.mk:hover{box-shadow:0 0 0 1.8px #05070c, 0 0 0 4px #f2eee5, 0 0 13px 3px var(--c);z-index:9;}
-.mk.done{
-  background:radial-gradient(circle at 34% 28%, #fffdf6cc, #ffffff00 58%), var(--accent);
-  box-shadow:0 0 0 1.4px #1a1205, 0 0 0 2.9px #ffe7b6ee, 0 1px 5px 1px #000a;
-}
-.mk.sel{box-shadow:0 0 0 2px #05070c, 0 0 0 4.4px var(--ink), 0 0 15px 4px var(--c);}
-.mk.hide{display:none;}
-.g-hub{--c:var(--g-hub);} .g-north{--c:var(--g-north);} .g-east{--c:var(--g-east);}
-.g-south{--c:var(--g-south);} .g-west{--c:var(--g-west);} .g-hybrid{--c:var(--g-hybrid);}
-.g-3d{--c:var(--g-3d);} .g-end{--c:var(--g-end);}
 
 #tip{
   position:fixed;z-index:70;pointer-events:none;opacity:0;transform:translate(-50%,-160%);
@@ -657,15 +624,8 @@ details.alt[open]>summary{margin-bottom:8px;}
 .ai .bdg.b-mild{color:#66748a;}
 .ai .bdg.b-chill{color:#5b687d;}
 /* 地图点位：即时关加一圈脉冲，扫图时能一眼找到 */
-.mk.u-hot{box-shadow:0 0 0 1.4px #0a0e18, 0 0 0 2.9px #ffb765, 0 0 0 5px #ffb7652e, 0 2px 5px #0008;}
-.mk.u-hot::before{content:"";position:absolute;inset:-5px;border-radius:50%;
-  border:1.5px solid #ffb765aa;animation:mkpulse 2.4s ease-out infinite;}
 @keyframes mkpulse{0%{transform:scale(.62);opacity:.85}70%{transform:scale(1.65);opacity:0}100%{opacity:0}}
-.mk.u-warm{box-shadow:0 0 0 1.4px #0a0e18, 0 0 0 2.9px #e9c98c, 0 2px 5px #0008;}
 /* 有停顿的关（含只等 1 拍的）在外圈加一道虚线，和纯解谜关区分开 */
-.mk.u-mild{box-shadow:0 0 0 1.4px #0a0e18, 0 0 0 2.9px #a39a86, 0 2px 5px #0008;}
-.mk.u-chill{box-shadow:0 0 0 1.4px #0a0e18, 0 0 0 2.9px #7d8698, 0 2px 5px #0008;}
-@media (prefers-reduced-motion:reduce){ .mk.u-hot::before{animation:none;opacity:.4;} }
 
 @media (max-width:620px){
   header{gap:7px;padding:0 9px;}
@@ -1406,7 +1366,9 @@ details.alt[open]>summary{margin-bottom:8px;}
     // 每级 2 倍的变化幅度对这类全图浏览的地图是合适的。
     zoomSnap: 1,
     zoomDelta: 1,
-    wheelPxPerZoomLevel: 70,
+    // 滚一格约累积 50，跨一级需要 4*该值。40 -> 约 3 格滚一级，手感接近常见地图。
+    wheelPxPerZoomLevel: 40,
+    wheelDebounceTime: 30,
     zoomControl: false,
     attributionControl: false,
     maxBoundsViscosity: 0.85,
@@ -1459,6 +1421,7 @@ details.alt[open]>summary{margin-bottom:8px;}
     z = Math.max(map.getMinZoom(), Math.min(map.getMaxZoom(), z));
     map.setView(bounds.getCenter(), z, { animate: false });
     applyView();
+    positionMkLayer();     // 视口可能变了，重算 canvas 像素尺寸并重画
   }
 
   // 把某个源图坐标移到「可视区中心」并设定缩放。
@@ -1497,13 +1460,10 @@ details.alt[open]>summary{margin-bottom:8px;}
     const k = scaleAt(z);
     // 元素最终宽度 = 自身宽 * k * inv，想要屏幕上恒定 11px 就得 inv = 1/k
     const inv = 1 / k;
-    if (mkLayer) mkLayer.style.setProperty("--inv", inv.toFixed(4));
     if (lbLayer) lbLayer.style.setProperty("--linv", inv.toFixed(4));
     // 小比例（整图铺满时）不画标记上的投影光晕：
     // 920 个点各带三层 box-shadow + 径向渐变，挤在一起时浏览器要逐个光栅化，
     // 这正是「地图很小时缩放很卡」的主因。只留底色圆点，视觉上反而更干净。
-    const dense = z < 2;
-    if (mkLayer) mkLayer.classList.toggle("dense", dense);
 
     const minor = z >= 3;
     if (lbLayer){
@@ -1514,35 +1474,174 @@ details.alt[open]>summary{margin-bottom:8px;}
     }
   }
 
-  function buildMarkers(){
-    if (!mkLayer){
-      mkLayer = document.createElement("div");
-      mkLayer.id = "markers";
-      // leaflet-zoom-animated：Leaflet 只给带这个类的元素加
-      // `transition: transform .25s`，缩放时才会逐帧插值。
-      // 少了它，zoomanim 设的终值会立刻生效，看起来就是「标点先跳过去、
-      // 地图再慢慢缩」。
-      mkLayer.className = "leaflet-pane mkpane leaflet-zoom-animated";
-    }
-    mkLayer.innerHTML = "";
-    const frag = document.createDocumentFragment();
-    LEVELS.forEach(l => {
-      const b = document.createElement("button");
+  /* ---------- 标记渲染（canvas） ----------
+     920 个关卡点如果用 DOM，每个都要算三层 box-shadow + 径向渐变，
+     缩放时浏览器逐个光栅化，是卡顿的主因。改为一张 canvas 一次画完：
+     只有「悬停」「选中」「紧急度脉冲」这几个少量状态才用 DOM 叠在上面。 */
+
+  // 每组区域的主色（与 CSS 变量同值）
+  const GROUP_COLOR = {
+    hub:"#d7dbe6", north:"#ef6a5b", east:"#7fb2ff", south:"#4fd1b5",
+    west:"#b28dff", hybrid:"#f0c05a", "3d":"#9aa7c7", end:"#ff9b4a",
+  };
+  // 紧急度用外圈颜色区分
+  const URG_COLOR = { hot:"#ffb765", warm:"#e9c98c", mild:"#a39a86", chill:"#7d8698" };
+
+  // 预计算每个点要用的静态属性，避免每次重绘都算一遍文本拆解
+  let MK_CACHE = null;
+  function mkData(){
+    if (MK_CACHE) return MK_CACHE;
+    MK_CACHE = LEVELS.map(l => {
       const u = urgencyOf(waitStats(l.s));
-      b.className = "mk g-" + groupOf(l.a) + (u ? " u-" + u.k : "");
-      // 位置写一次即可，后续视图变化不再改动
-      b.style.left = l.px + "px";
-      b.style.top = l.py + "px";
-      b.dataset.id = l.id;
-      b.dataset.ly = l.ly;
-      b.dataset.px = l.px;
-      b.dataset.py = l.py;
-      b.title = l.t + (u ? ` · ${u.cn}` : "");
-      b.setAttribute("aria-label", l.t);
-      frag.appendChild(b);
+      return {
+        l, px: l.px, py: l.py, ly: l.ly, area: l.a, id: l.id,
+        color: GROUP_COLOR[groupOf(l.a)] || "#f0c05a",
+        urg: u ? u.k : null,
+        urgColor: u ? URG_COLOR[u.k] : null,
+        label: l.t + (u ? ` · ${u.cn}` : ""),
+        // 搜索用的预小写串（中英双语 + 区域名 + 层名）
+        hay: (l.t + " " + AR(l.a) + " " + ((AREAS[l.a] || {}).cn || "") + " " + LAYER_NAME(l.ly)).toLowerCase(),
+      };
     });
-    mkLayer.appendChild(frag);
-    positionMkLayer();
+    return MK_CACHE;
+  }
+
+  // 当前可见集合（层 / 区域 / 搜索三重过滤）
+  let VIS = [];
+  function recomputeVisible(){
+    const q = state.q.toLowerCase();
+    VIS = [];
+    for (const m of mkData()){
+      if (m.ly !== state.layer) continue;
+      if (state.area !== "all" && m.area !== state.area) continue;
+      if (q && !m.hay.includes(q)) continue;
+      VIS.push(m);
+    }
+    return VIS;
+  }
+
+  // 空间查询：找屏幕坐标附近最近的点（用于点击/悬停命中）
+  function hitTest(clientX, clientY){
+    if (!map) return null;
+    const p = map.mouseEventToContainerPoint({ clientX, clientY });
+    // 命中半径：屏幕像素，按标记在当前缩放下的实际显示尺寸放宽一点
+    const R = 11;
+    let best = null, bestD = R * R;
+    for (const m of VIS){
+      const q = map.latLngToContainerPoint(toLL(m.px, m.py));
+      const dx = q.x - p.x, dy = q.y - p.y;
+      const d = dx * dx + dy * dy;
+      if (d < bestD){ bestD = d; best = m; }
+    }
+    return best;
+  }
+
+  // 画标记。所有点一次过，按当前 zoom 决定装饰程度。
+  function paintMarkers(){
+    if (!mkCanvas || !map) return;
+    const z = map.getZoom();
+    const ctx = mkCtx;
+    const W = mkCanvas.width, H = mkCanvas.height;
+
+    // 画布尺寸 = 视口尺寸 * dpr；坐标系按 CSS 像素来，方便与 latLngToContainerPoint 对齐
+    ctx.setTransform(mkDpr, 0, 0, mkDpr, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+
+    const inv = 1 / scaleAt(z);
+    // 标记在屏幕上的半径：11px 直径 -> 5.5px 半径
+    const r = 5.5;
+    // 密集时（整图铺满）省略描边与紧急度外圈，只画纯色点
+    const dense = z < 2;
+
+    const selId = state.sel;
+    const hoverId = hoverMark ? hoverMark.id : null;
+
+    // 普通点：按颜色分组批量画，减少状态切换
+    const byColor = new Map();
+    for (const m of VIS){
+      if (m.id === selId || m.id === hoverId) continue;
+      const p = map.latLngToContainerPoint(toLL(m.px, m.py));
+      if (p.x < -20 || p.y < -20 || p.x > W / mkDpr + 20 || p.y > H / mkDpr + 20) continue;
+      const done = state.done.has(m.id);
+      const key = (done ? "d:" : "n:") + (dense ? "" : (m.urgColor || "")) + m.color;
+      let arr = byColor.get(key);
+      if (!arr){ arr = []; byColor.set(key, arr); }
+      arr.push(p);
+    }
+
+    for (const [key, pts] of byColor){
+      const done = key.startsWith("d:");
+      const rest = key.slice(2);
+      const urgColor = dense ? "" : (rest.length > 7 ? rest.slice(0, 7) : "");
+      const baseColor = dense ? rest : (urgColor ? rest.slice(7) : rest);
+      const fill = done ? "#e2be7d" : baseColor;
+
+      // 外圈：深色描边压住底图 + 亮色内圈拉开对比（对应原来的三层 box-shadow）
+      if (!dense){
+        ctx.fillStyle = done ? "#1a1205" : "#05070c";
+        for (const p of pts){ ctx.beginPath(); ctx.arc(p.x, p.y, r + 1.4, 0, 6.2832); ctx.fill(); }
+        ctx.fillStyle = urgColor || (done ? "#ffe7b6" : "#fbf6ea");
+        for (const p of pts){ ctx.beginPath(); ctx.arc(p.x, p.y, r + 0.35, 0, 6.2832); ctx.fill(); }
+      }
+      // 主体
+      ctx.fillStyle = fill;
+      for (const p of pts){ ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, 6.2832); ctx.fill(); }
+
+      // 高光：一小块偏左上的半透明亮斑，做出"球面"感（对应原 radial-gradient）
+      if (!dense && pts.length <= 400){
+        ctx.fillStyle = "rgba(255,255,255,0.5)";
+        for (const p of pts){
+          ctx.beginPath(); ctx.arc(p.x - r * 0.3, p.y - r * 0.35, r * 0.42, 0, 6.2832); ctx.fill();
+        }
+      }
+    }
+
+    // 叠加选中的点（画在最上层）
+    const sel = selId != null ? VIS.find(m => m.id === selId) : null;
+    if (sel){
+      const p = map.latLngToContainerPoint(toLL(sel.px, sel.py));
+      ctx.beginPath(); ctx.arc(p.x, p.y, r + 3.2, 0, 6.2832);
+      ctx.lineWidth = 2.4; ctx.strokeStyle = "#f2eee5"; ctx.stroke();
+    }
+  }
+
+  // canvas 与图层一起随地图缩放：放在 overlayPane 里，但我们按「屏幕像素」直接画，
+  // 所以不要跟着父级 scale，而是自己铺满视口并随 move/zoom 重画。
+  let mkCanvas = null, mkCtx = null, mkDpr = 1;
+  let hoverMark = null;
+
+  function buildMarkers(){
+    if (!mkCanvas){
+      mkCanvas = document.createElement("canvas");
+      mkCanvas.id = "markers";
+      mkCanvas.className = "mkcanvas leaflet-zoom-animated";
+      mkCanvas.setAttribute("aria-hidden", "true");
+    }
+    mkDpr = Math.min(2, window.devicePixelRatio || 1);
+    const el = map.getContainer();
+    const w = el.clientWidth, h = el.clientHeight;
+    mkCanvas.width = Math.round(w * mkDpr);
+    mkCanvas.height = Math.round(h * mkDpr);
+    mkCanvas.style.width = w + "px";
+    mkCanvas.style.height = h + "px";
+    mkCtx = mkCanvas.getContext("2d", { alpha: true });
+    // canvas 是屏幕空间的东西，挂在 stage 上而不是地图图层里，位置由自己维护
+    if (!stage.contains(mkCanvas)) stage.appendChild(mkCanvas);
+    recomputeVisible();
+    syncCanvasBox();
+    paintMarkers();
+  }
+
+  // canvas 固定铺满视口，随地图容器大小变化
+  function syncCanvasBox(){
+    if (!mkCanvas) return;
+    mkCanvas.style.position = "absolute";
+    mkCanvas.style.left = "0";
+    mkCanvas.style.top = "0";
+    mkCanvas.style.transform = "none";
+    // 绝不接收鼠标事件：否则会挡住 Leaflet 的拖拽和滚轮缩放。
+    // 点击/悬停统一由 stage 上做坐标命中检测。
+    mkCanvas.style.pointerEvents = "none";
   }
 
   // 覆盖层定位。
@@ -1592,54 +1691,90 @@ details.alt[open]>summary{margin-bottom:8px;}
     zoomAnimating = false;
     if (mkLayer) mkLayer.classList.remove("zooming");
     if (lbLayer) lbLayer.classList.remove("zooming");
-    // 动画期间 placeOverlay 是跳过状态，这里补一次精确对位，消除浮点误差
+    // 动画期间是跳过状态，这里补一次精确对位
     lastZoomForLayout = map.getZoom();
-    positionMkLayer();
     positionLbLayer();
+    stopZoomPaint();
+    paintMarkers();
   }
 
+  // 缩放动画：地名层用 CSS transition 跟随；
+  // canvas 标记无法用 CSS 插值，动画期间先隐藏，结束后按新视图重画一次
+  // （瓦片本身也在动画结束时才换层，视觉上是同步的）。
   function onZoomAnim(e){
-    if (!map || !mkLayer) return;
+    if (!map || !lbLayer) return;
     beginZoomAnim();
     const z = e.zoom;
-    // 目标层级的原点：用 Leaflet 自己的换算，保证与瓦片一致
     const o = map._latLngToNewLayerPoint(toLL(0, 0), z, e.center);
     const k = scaleAt(z);
-    [mkLayer, lbLayer].forEach(layer => {
-      if (!layer) return;
-      layer.style.position = "absolute";
-      layer.style.left = "0";
-      layer.style.top = "0";
-      layer.style.width = MAP_W + "px";
-      layer.style.height = MAP_H + "px";
-      layer.style.transformOrigin = "0 0";
-      layer.style.transform = `translate(${o.x}px, ${o.y}px) scale(${k})`;
-    });
-    // 反向缩放，让标记在屏幕上保持恒定大小
-    const inv = 1 / k;
-    if (mkLayer) mkLayer.style.setProperty("--inv", inv.toFixed(4));
-    if (lbLayer) lbLayer.style.setProperty("--linv", inv.toFixed(4));
+    lbLayer.style.position = "absolute";
+    lbLayer.style.left = "0";
+    lbLayer.style.top = "0";
+    lbLayer.style.width = MAP_W + "px";
+    lbLayer.style.height = MAP_H + "px";
+    lbLayer.style.transformOrigin = "0 0";
+    lbLayer.style.transform = `translate(${o.x}px, ${o.y}px) scale(${k})`;
+    lbLayer.style.setProperty("--linv", (1 / k).toFixed(4));
+    // canvas 不能用 CSS 插值。缩放动画期间逐帧重画，标记才会跟着地图一起缩放，
+    // 而不是等动画结束才跳到终点。
+    startZoomPaint();
   }
 
+  // 缩放动画期间的逐帧重画循环
+  let zoomPaintRaf = null;
+  function startZoomPaint(){
+    if (zoomPaintRaf != null) return;
+    const tick = () => {
+      if (!zoomAnimating){ zoomPaintRaf = null; return; }
+      paintMarkers();
+      zoomPaintRaf = requestAnimationFrame(tick);
+    };
+    zoomPaintRaf = requestAnimationFrame(tick);
+  }
+  function stopZoomPaint(){
+    if (zoomPaintRaf != null){ cancelAnimationFrame(zoomPaintRaf); zoomPaintRaf = null; }
+  }
+
+  // 重画标记（视图或数据变化时调用）
   function positionMkLayer(){
-    if (!mkLayer) return;
-    placeOverlay(mkLayer);
-    // 标记的 left/top 只在 buildMarkers() 里设一次就够了 ——
-    // 它们是固定不变的源图坐标，每次视图变化重设 920 次是纯浪费。
+    syncCanvasSize();
+    paintMarkers();
   }
 
-  // 只在地图层级变化时重排覆盖层。
-  // 拖动（move）时 mapPane 的 transform 已经带着子元素一起走了，
-  // 再对 920 个节点逐个写 style 纯属浪费 —— 那正是小比例下拖动/缩放卡顿的来源。
+  // 视口尺寸变化时同步 canvas 的像素尺寸
+  function syncCanvasSize(){
+    if (!mkCanvas || !map) return;
+    const el = map.getContainer();
+    const w = el.clientWidth, h = el.clientHeight;
+    if (mkCanvas.width === Math.round(w * mkDpr) && mkCanvas.height === Math.round(h * mkDpr)) return;
+    mkCanvas.width = Math.round(w * mkDpr);
+    mkCanvas.height = Math.round(h * mkDpr);
+    mkCanvas.style.width = w + "px";
+    mkCanvas.style.height = h + "px";
+  }
+
+  // 视图变化：地名层只在地图层级变化时重排（拖动时它随 mapPane 自动跟随）；
+  // canvas 标记是按屏幕坐标画的，任何平移缩放都要重画。
   let lastZoomForLayout = null;
+  let paintQueued = false;
   function onViewChange(){
     const z = map.getZoom();
     if (z !== lastZoomForLayout){
       lastZoomForLayout = z;
-      positionMkLayer();
       positionLbLayer();
     }
     applyView();
+    queuePaint();
+  }
+
+  // 拖动时 move 事件很密，用 rAF 合并，一帧最多重画一次
+  function queuePaint(){
+    if (paintQueued) return;
+    paintQueued = true;
+    requestAnimationFrame(() => {
+      paintQueued = false;
+      paintMarkers();
+    });
   }
 
   function positionLbLayer(){
@@ -1683,40 +1818,63 @@ details.alt[open]>summary{margin-bottom:8px;}
   let rt = null;
   window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(fit, 150); });
 
-  /* ---------- 点标记选关 ---------- */
-  // 用事件委托绑在 stage 上：标记是动态重建的，绑在标记本身会在换语言/换层后失效。
-  // 同时要区分「拖动地图」和「点了一下」—— 拖完手松开不该跳转。
-  let mkDown = null;
+  /* ---------- 点标记选关 / 悬停提示 ----------
+     标记画在 canvas 上，没有 DOM 可绑定，改用坐标命中检测。
+     区分「拖动地图」和「点了一下」：按下与抬起落在同一个点上才算点击。 */
+  const tip = document.getElementById("tip");
+  let downAt = null;       // 按下时的屏幕坐标
+  let downMark = null;     // 按下命中的标记
+
+  function stageXY(e){
+    const r = stage.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  }
+
   stage.addEventListener("pointerdown", e => {
-    mkDown = e.target.closest && e.target.closest(".mk");
-  });
-  stage.addEventListener("pointerup", e => {
-    const mk = e.target.closest && e.target.closest(".mk");
-    if (mk && mk === mkDown) openLevel(+mk.dataset.id, true);
-    mkDown = null;
-  });
-  // 键盘（Tab + Enter）激活
-  stage.addEventListener("click", e => {
-    if (e.detail !== 0) return;
-    const mk = e.target.closest(".mk");
-    if (mk) openLevel(+mk.dataset.id, true);
+    if (e.button !== 0) return;
+    downAt = { x: e.clientX, y: e.clientY };
+    downMark = hitTest(e.clientX, e.clientY);
   });
 
-  /* ---------- 悬浮提示 ---------- */
-  const tip = document.getElementById("tip");
-  stage.addEventListener("mouseover", e => {
-    const mk = e.target.closest(".mk");
-    if (!mk) return;
-    const l = byId(+mk.dataset.id);
-    tip.innerHTML = `<b>${esc(l.t)}</b><i>${esc(AR(l.a))} · ${LAYER_NAME(l.ly)} · #${pad(l.id)}</i>`;
-    tip.classList.add("on");
+  stage.addEventListener("pointerup", e => {
+    if (!downAt) return;
+    const moved = Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y);
+    // 位移小于 4px 视为点击（Leaflet 自己也会用类似的阈值）
+    if (moved < 4 && downMark){
+      const still = hitTest(e.clientX, e.clientY);
+      if (still && still.id === downMark.id) openLevel(still.id, true);
+    }
+    downAt = null; downMark = null;
   });
+
+  stage.addEventListener("pointercancel", () => { downAt = null; downMark = null; });
+
   stage.addEventListener("mousemove", e => {
-    tip.style.left = e.clientX + "px";
-    tip.style.top = e.clientY + "px";
+    // 拖动中不做悬停反馈，避免拖动时闪烁
+    if (map && map.dragging && map.dragging._draggable && map.dragging._draggable._moving){
+      if (hoverMark){ hoverMark = null; tip.classList.remove("on"); stage.classList.remove("mk-hot"); }
+      return;
+    }
+    const hit = hitTest(e.clientX, e.clientY);
+    if (hit !== hoverMark){
+      hoverMark = hit;
+      stage.classList.toggle("mk-hot", !!hit);
+      paintMarkers();
+    }
+    if (hit){
+      tip.innerHTML = `<b>${esc(hit.l.t)}</b><i>${esc(AR(hit.area))} · ${LAYER_NAME(hit.ly)} · #${pad(hit.id)}</i>`;
+      tip.classList.add("on");
+      tip.style.left = e.clientX + "px";
+      tip.style.top = e.clientY + "px";
+    } else {
+      tip.classList.remove("on");
+    }
   });
-  stage.addEventListener("mouseout", e => {
-    if (e.target.closest(".mk")) tip.classList.remove("on");
+
+  stage.addEventListener("mouseleave", () => {
+    if (hoverMark){ hoverMark = null; paintMarkers(); }
+    stage.classList.remove("mk-hot");
+    tip.classList.remove("on");
   });
 
   /* ---------- 筛选（已并入左侧「关卡索引」：点区域名即筛选） ---------- */
@@ -1761,21 +1919,13 @@ details.alt[open]>summary{margin-bottom:8px;}
   }
 
   function applyFilter(){
-    const q = state.q.toLowerCase();
-    document.querySelectorAll(".mk").forEach(el => {
-      const l = byId(+el.dataset.id);
-      let show = l.ly === state.layer;
-      if (state.area !== "all" && l.a !== state.area) show = false;
-      // 中英双语都能搜：输入中文命中中文名，输入英文命中英文名
-      if (q && !(l.t.toLowerCase().includes(q) || AR(l.a).toLowerCase().includes(q)
-        || ((AREAS[l.a] || {}).cn || "").includes(q) || LAYER_NAME(l.ly).toLowerCase().includes(q))) show = false;
-      el.classList.toggle("hide", !show);
-    });
+    recomputeVisible();
+    queuePaint();
   }
 
   /* ---------- 进度 ---------- */
   function refreshProgress(){
-    document.querySelectorAll(".mk").forEach(el => el.classList.toggle("done", state.done.has(+el.dataset.id)));
+    queuePaint();
     document.getElementById("pct").textContent = `${state.done.size} / ${LEVELS.length}`;
     document.getElementById("pbar").style.width = (state.done.size / LEVELS.length * 100).toFixed(1) + "%";
     document.querySelectorAll(".ai").forEach(b => b.classList.toggle("done", state.done.has(+b.dataset.id)));
@@ -1959,7 +2109,7 @@ details.alt[open]>summary{margin-bottom:8px;}
   document.addEventListener("keydown", e => { if (e.key === "Escape") openAbout(false); });
 
   /* ---------- 关于：数据来源 · 版本记录 ---------- */
-  const VERSION = "0.12.7";
+  const VERSION = "0.13.0";
   const VERSION_DATE = "2026-11-19";
 
   function colophonHTML(){
@@ -2143,6 +2293,13 @@ details.alt[open]>summary{margin-bottom:8px;}
       <li>Leaflet 1.9.4 已本地化到 <code>assets/vendor/</code>，不依赖外部 CDN（jsdelivr 在国内不可达）</li>
       <li>标记、地名、进度、搜索、URL 定位、导入导出等原有功能全部保留</li>
       <li>瓦片由 <code>tools/make-tiles.py</code> 生成，改底图后重跑即可</li>
+      <li><b>关卡标点改用 canvas 渲染</b>：920 个 DOM 降到 0（总节点 2401 → 1479）。
+        每个点原本带三层投影和径向渐变，缩放时浏览器逐个光栅化，是卡顿主因；
+        现在一次绘制完成，重绘耗时降至 1ms 以内</li>
+      <li>点击与悬停改为坐标命中检测（命中半径 11px），区分拖动与点击（位移 &lt;4px 算点击）</li>
+      <li>缩放动画期间逐帧重画，标点与地图同步缩放，不再「跳到终点」</li>
+      <li>canvas 设 <code>pointer-events:none</code> 并置于地图之上（z-index 800），
+        不拦截 Leaflet 的拖拽与滚轮</li>
       <li>修：<b>点击标点后地图会跳一下</b> —— 原来是「先平滑移到几何中心，动画结束再瞬时补偏移」
         两段拼接；现改为一次性算出带面板偏移的最终中心，单次动画到位</li>
       <li>清理：删除手写地图引擎的残留 —— 未使用的 <code>ACTS</code>、<code>fromLL</code>，
@@ -2643,9 +2800,7 @@ level and solution data from <a href="https://github.com/joric/ootss" target="_b
       setIndexOpen(false);
     }
     state.sel = id;
-    document.querySelectorAll(".mk.sel").forEach(e => e.classList.remove("sel"));
-    const mk = document.querySelector(`.mk[data-id="${id}"]`);
-    if (mk) mk.classList.add("sel");
+    paintMarkers();          // 选中圈画在 canvas 上
     render(l);
     panel.classList.add("open");
     // 保持用户当前缩放级别；太远时拉到 z3（能看清关卡所在格子的程度）。
@@ -2661,7 +2816,7 @@ level and solution data from <a href="https://github.com/joric/ootss" target="_b
   function closePanel(){
     panel.classList.remove("open");
     state.sel = null;
-    document.querySelectorAll(".mk.sel").forEach(e => e.classList.remove("sel"));
+    paintMarkers();
     document.querySelectorAll(".ai.act").forEach(e => e.classList.remove("act"));
     if (idxWasOpen){
       idxWasOpen = false;
@@ -3106,9 +3261,11 @@ level and solution data from <a href="https://github.com/joric/ootss" target="_b
   map.on("zoomanim", onZoomAnim);
   map.on("zoomend", endZoomAnim);
   map.on("zoom zoom move moveend viewreset", onViewChange);
-  // 允许稍微拖出边界一点，但不要用 pad 太大 —— pad 会连带限制可缩放的层级，
-  // 之前 0.15 把初始视图压到了 z1.5，地图只占屏幕中间一小块。
-  map.setMaxBounds(bounds.pad(0.02));
+  // 用「宽松留白 + 高粘度」限制拖动，而不要贴近图片边界：
+  // setMaxBounds 会连带限制 getBoundsZoom，边界一紧，缩放就被卡在某一级动不了
+  // （表现为滚轮完全没反应）。留出一整个视口宽度，缩放不再受限，拖出可见范围时
+  // 也会被 viscosity 拉回来。
+  map.setMaxBounds(bounds.pad(0.35));
 
   buildIndex();
   refreshProgress();
