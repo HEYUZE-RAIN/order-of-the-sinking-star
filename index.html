@@ -1537,17 +1537,33 @@ details.alt[open]>summary{margin-bottom:8px;}
   }
 
   // 画标记。所有点一次过，按当前 zoom 决定装饰程度。
-  function paintMarkers(){
+  // p 为缩放动画进度（0..1）。不传表示静止状态，直接用当前视图。
+  function paintMarkers(p){
     if (!mkCanvas || !map) return;
     const z = map.getZoom();
     const ctx = mkCtx;
     const W = mkCanvas.width, H = mkCanvas.height;
 
-    // 画布尺寸 = 视口尺寸 * dpr；坐标系按 CSS 像素来，方便与 latLngToContainerPoint 对齐
+    // 画布尺寸 = 视口尺寸 * dpr；坐标系按 CSS 像素来
     ctx.setTransform(mkDpr, 0, 0, mkDpr, 0, 0);
     ctx.clearRect(0, 0, W, H);
 
-    const inv = 1 / scaleAt(z);
+    // 动画期间：在起点与终点的 translate/scale 之间插值，
+    // 这样标记与瓦片用同一条缓动曲线一起缩放。
+    let toScreen;
+    if (p != null && zoomFrom && zoomTo){
+      const t = easeLeaflet(Math.max(0, Math.min(1, p)));
+      const s = zoomFrom.scale + (zoomTo.scale - zoomFrom.scale) * t;
+      const ox = zoomFrom.origin.x + (zoomTo.origin.x - zoomFrom.origin.x) * t;
+      const oy = zoomFrom.origin.y + (zoomTo.origin.y - zoomFrom.origin.y) * t;
+      // 世界(源图)坐标 -> 屏幕坐标
+      toScreen = (px2, py2) => ({ x: ox + px2 * s, y: oy + py2 * s });
+    } else {
+      const cur = map.latLngToLayerPoint(toLL(0, 0));
+      const s = scaleAt(z);
+      toScreen = (px2, py2) => ({ x: cur.x + px2 * s, y: cur.y + py2 * s });
+    }
+
     // 标记在屏幕上的半径：11px 直径 -> 5.5px 半径
     const r = 5.5;
     // 密集时（整图铺满）省略描边与紧急度外圈，只画纯色点
@@ -1560,7 +1576,7 @@ details.alt[open]>summary{margin-bottom:8px;}
     const byColor = new Map();
     for (const m of VIS){
       if (m.id === selId || m.id === hoverId) continue;
-      const p = map.latLngToContainerPoint(toLL(m.px, m.py));
+      const p = toScreen(m.px, m.py);
       if (p.x < -20 || p.y < -20 || p.x > W / mkDpr + 20 || p.y > H / mkDpr + 20) continue;
       const done = state.done.has(m.id);
       const key = (done ? "d:" : "n:") + (dense ? "" : (m.urgColor || "")) + m.color;
@@ -1599,7 +1615,7 @@ details.alt[open]>summary{margin-bottom:8px;}
     // 叠加选中的点（画在最上层）
     const sel = selId != null ? VIS.find(m => m.id === selId) : null;
     if (sel){
-      const p = map.latLngToContainerPoint(toLL(sel.px, sel.py));
+      const p = toScreen(sel.px, sel.py);
       ctx.beginPath(); ctx.arc(p.x, p.y, r + 3.2, 0, 6.2832);
       ctx.lineWidth = 2.4; ctx.strokeStyle = "#f2eee5"; ctx.stroke();
     }
@@ -1715,19 +1731,36 @@ details.alt[open]>summary{margin-bottom:8px;}
     lbLayer.style.transformOrigin = "0 0";
     lbLayer.style.transform = `translate(${o.x}px, ${o.y}px) scale(${k})`;
     lbLayer.style.setProperty("--linv", (1 / k).toFixed(4));
-    // canvas 不能用 CSS 插值。缩放动画期间逐帧重画，标记才会跟着地图一起缩放，
-    // 而不是等动画结束才跳到终点。
+    // canvas 不能用 CSS 插值，改为按同样的缓动曲线逐帧重画。
+    // 记录动画两端的视图状态：起点用当前视图，终点用 zoomanim 给的层级与中心。
+    zoomFrom = { scale: scaleAt(map.getZoom()), origin: map.latLngToLayerPoint(toLL(0, 0)) };
+    zoomTo = { scale: k, origin: o };
     startZoomPaint();
   }
 
   // 缩放动画期间的逐帧重画循环
   let zoomPaintRaf = null;
+  let zoomFrom = null, zoomTo = null;   // 动画两端的世界->屏幕变换
+  // 缩放动画时长，与 Leaflet 的 zoomAnimation（250ms）一致
+  const ZOOM_ANIM_MS = 250;
+
+  // 与 CSS cubic-bezier(0,0,.25,1) 等价的缓动，用手解三次贝塞尔近似
+  function easeLeaflet(t){
+    // 该曲线控制点 (0,0) (0.25,1)：先慢后快再缓，最贴近的是 t^0.55 型
+    return 1 - Math.pow(1 - t, 1.6);
+  }
+
   function startZoomPaint(){
     if (zoomPaintRaf != null) return;
+    const t0 = performance.now();
     const tick = () => {
-      if (!zoomAnimating){ zoomPaintRaf = null; return; }
-      paintMarkers();
-      zoomPaintRaf = requestAnimationFrame(tick);
+      const p = Math.min(1, (performance.now() - t0) / ZOOM_ANIM_MS);
+      paintMarkers(p);
+      if (p < 1 && zoomAnimating){
+        zoomPaintRaf = requestAnimationFrame(tick);
+      } else {
+        zoomPaintRaf = null;
+      }
     };
     zoomPaintRaf = requestAnimationFrame(tick);
   }
@@ -2109,7 +2142,7 @@ details.alt[open]>summary{margin-bottom:8px;}
   document.addEventListener("keydown", e => { if (e.key === "Escape") openAbout(false); });
 
   /* ---------- 关于：数据来源 · 版本记录 ---------- */
-  const VERSION = "0.13.0";
+  const VERSION = "0.13.1";
   const VERSION_DATE = "2026-11-19";
 
   function colophonHTML(){
@@ -2297,7 +2330,8 @@ details.alt[open]>summary{margin-bottom:8px;}
         每个点原本带三层投影和径向渐变，缩放时浏览器逐个光栅化，是卡顿主因；
         现在一次绘制完成，重绘耗时降至 1ms 以内</li>
       <li>点击与悬停改为坐标命中检测（命中半径 11px），区分拖动与点击（位移 &lt;4px 算点击）</li>
-      <li>缩放动画期间逐帧重画，标点与地图同步缩放，不再「跳到终点」</li>
+      <li>缩放动画期间按 <b>250ms</b> 缓动逐帧重画（与 Leaflet 的 zoomAnimation 时长一致），
+        标点在起点与终点之间插值，与底图同步缩放</li>
       <li>canvas 设 <code>pointer-events:none</code> 并置于地图之上（z-index 800），
         不拦截 Leaflet 的拖拽与滚轮</li>
       <li>修：<b>点击标点后地图会跳一下</b> —— 原来是「先平滑移到几何中心，动画结束再瞬时补偏移」
