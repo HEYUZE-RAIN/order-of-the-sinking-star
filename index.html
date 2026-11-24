@@ -132,6 +132,18 @@ header > .iconbtn{flex-shrink:0;}
 #map .leaflet-tile-container{will-change:auto;}
 /* 缩放动画期间：标记与地名跟随 transform 插值，与瓦片完全同步。
    只过渡 transform，避免 --inv / --linv 变化也产生过渡导致尺寸抖动。 */
+/* 缩到整图铺满时（z<2），920 个标记挤在屏幕上，降级渲染：
+   去掉多重投影与渐变高光，只保留纯色圆点。 */
+#markers.dense .mk{
+  background:var(--c);
+  box-shadow:0 0 0 1px #05070cc0;
+}
+#markers.dense .mk.done{
+  background:var(--accent);
+  box-shadow:0 0 0 1px #1a1205;
+}
+#markers.dense .mk::after{display:none;}
+
 #markers.zooming,#labels.zooming{
   transition:transform .25s cubic-bezier(0,0,.25,1);
   will-change:transform;
@@ -1464,6 +1476,12 @@ details.alt[open]>summary{margin-bottom:8px;}
     const inv = 1 / k;
     if (mkLayer) mkLayer.style.setProperty("--inv", inv.toFixed(4));
     if (lbLayer) lbLayer.style.setProperty("--linv", inv.toFixed(4));
+    // 小比例（整图铺满时）不画标记上的投影光晕：
+    // 920 个点各带三层 box-shadow + 径向渐变，挤在一起时浏览器要逐个光栅化，
+    // 这正是「地图很小时缩放很卡」的主因。只留底色圆点，视觉上反而更干净。
+    const dense = z < 2;
+    if (mkLayer) mkLayer.classList.toggle("dense", dense);
+
     const minor = z >= 2.5;
     if (lbLayer){
       lbLayer.querySelectorAll(".alab").forEach(el => {
@@ -1489,6 +1507,9 @@ details.alt[open]>summary{margin-bottom:8px;}
       const b = document.createElement("button");
       const u = urgencyOf(waitStats(l.s));
       b.className = "mk g-" + groupOf(l.a) + (u ? " u-" + u.k : "");
+      // 位置写一次即可，后续视图变化不再改动
+      b.style.left = l.px + "px";
+      b.style.top = l.py + "px";
       b.dataset.id = l.id;
       b.dataset.ly = l.ly;
       b.dataset.px = l.px;
@@ -1533,7 +1554,13 @@ details.alt[open]>summary{margin-bottom:8px;}
   // 当前 zoom 对应的世界->屏幕倍率
   function scaleAt(z){ return Math.pow(2, z) * (256 / MAP_W); }
 
-  // 覆盖层左上角（对应源图 0,0）在 mapPane 坐标系里的位置
+  // 覆盖层左上角（对应源图 0,0）在 mapPane 坐标系里的位置。
+  //
+  // mapPane 自身的 transform 就是 _getMapPanePos() 的平移，
+  // 所以挂在它里面的子元素要用「不含 pane 平移」的层坐标 —— 也就是
+  // latLngToLayerPoint 的结果再减掉 pane 偏移。
+  // 注意：拖动地图时 Leaflet 改的是 mapPane 的 transform，子元素跟着一起动，
+  // 不需要我们重新算；只有 zoom 变化才需要重排（尺寸变了）。
   function paneOrigin(){
     return map.latLngToLayerPoint(toLL(0, 0)).subtract(map._getMapPanePos());
   }
@@ -1588,26 +1615,29 @@ details.alt[open]>summary{margin-bottom:8px;}
   function positionMkLayer(){
     if (!mkLayer) return;
     placeOverlay(mkLayer);
-    mkLayer.querySelectorAll(".mk").forEach(el => {
-      el.style.left = el.dataset.px + "px";
-      el.style.top = el.dataset.py + "px";
-    });
+    // 标记的 left/top 只在 buildMarkers() 里设一次就够了 ——
+    // 它们是固定不变的源图坐标，每次视图变化重设 920 次是纯浪费。
   }
 
   // 每次视图变化：重排覆盖层，并同步标记尺寸
+  // 只在地图层级变化时重排覆盖层。
+  // 拖动（move）时 mapPane 的 transform 已经带着子元素一起走了，
+  // 再对 920 个节点逐个写 style 纯属浪费 —— 那正是小比例下拖动/缩放卡顿的来源。
+  let lastZoomForLayout = null;
   function onViewChange(){
-    positionMkLayer();
-    positionLbLayer();
+    const z = map.getZoom();
+    if (z !== lastZoomForLayout){
+      lastZoomForLayout = z;
+      positionMkLayer();
+      positionLbLayer();
+    }
     applyView();
   }
 
   function positionLbLayer(){
     if (!lbLayer) return;
     placeOverlay(lbLayer);
-    lbLayer.querySelectorAll(".alab").forEach(el => {
-      el.style.left = el.dataset.px + "px";
-      el.style.top = el.dataset.py + "px";
-    });
+    // 同上：地名位置是固定的，只在 buildLabels 时设一次
   }
 
   function buildLabels(){
@@ -1918,7 +1948,7 @@ details.alt[open]>summary{margin-bottom:8px;}
   document.addEventListener("keydown", e => { if (e.key === "Escape") openAbout(false); });
 
   /* ---------- 关于：数据来源 · 版本记录 ---------- */
-  const VERSION = "0.12.1";
+  const VERSION = "0.12.2";
   const VERSION_DATE = "2026-11-19";
 
   function colophonHTML(){
@@ -2102,6 +2132,12 @@ details.alt[open]>summary{margin-bottom:8px;}
       <li>Leaflet 1.9.4 已本地化到 <code>assets/vendor/</code>，不依赖外部 CDN（jsdelivr 在国内不可达）</li>
       <li>标记、地名、进度、搜索、URL 定位、导入导出等原有功能全部保留</li>
       <li>瓦片由 <code>tools/make-tiles.py</code> 生成，改底图后重跑即可</li>
+      <li>修：首屏三层 920 个标点全部显示 —— <code>setLayer</code> 里的过滤在标记创建前执行等于空跑，
+        现改为建完标记后再过滤一次</li>
+      <li>修：拖动地图时标点不跟随 —— 覆盖层挂在 <code>mapPane</code> 上，
+        平移由它的 transform 带动，不再重复计算</li>
+      <li>修：缩到整图时卡顿 —— 920 个点各带三层投影与渐变，光栅化开销大；
+        现在 <b>z&lt;2 时降级为纯色圆点</b>，放大后恢复完整样式</li>
       <li>修：缩放时标点不再「先跳过去」——给它加上 Leaflet 的 <code>leaflet-zoom-animated</code> 类，
         过渡曲线与瓦片完全一致（<code>transform .25s cubic-bezier(0,0,.25,1)</code>）；
         该过渡只在缩放期间开启，拖动时关闭以免拖尾</li>
@@ -3062,6 +3098,10 @@ level and solution data from <a href="https://github.com/joric/ootss" target="_b
   map.fitBounds(bounds, { padding: [8, 8], animate: false });
   buildMarkers();
   buildLabels();
+  // applyFilter 必须在标记建好之后再跑一次：
+  // setLayer 里虽然也调了，但那时标记还没创建，等于空跑，
+  // 结果首屏把三层 920 个标记全显示出来了。
+  applyFilter();
   onViewChange();
 
 
