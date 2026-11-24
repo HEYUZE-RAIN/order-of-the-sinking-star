@@ -1733,9 +1733,20 @@ details.alt[open]>summary{margin-bottom:8px;}
     lbLayer.style.transform = `translate(${o.x}px, ${o.y}px) scale(${k})`;
     lbLayer.style.setProperty("--linv", (1 / k).toFixed(4));
     // canvas 不能用 CSS 插值，改为按同样的缓动曲线逐帧重画。
-    // 记录动画两端的视图状态：起点用当前视图，终点用 zoomanim 给的层级与中心。
-    zoomFrom = { scale: scaleAt(map.getZoom()), origin: map.latLngToLayerPoint(toLL(0, 0)) };
-    zoomTo = { scale: k, origin: o };
+    //
+    // 关键：两端都必须用「视口坐标」（containPoint），不能一端 layerPoint
+    // 一端 containerPoint —— layerPoint 不含 mapPane 的平移，拖过地图之后
+    // 两者差着一个 pane 位移，中间帧就会整片偏掉。
+    //
+    // 起点：当前视口里源图 (0,0) 的位置。
+    // 终点：把目标中心放到屏幕中心后，(0,0) 会落在哪 —— 直接反推，
+    //       等价于 latLngToContainerPoint，但不依赖地图已切到目标视图。
+    const size = map.getSize();
+    const fromOrigin = map.latLngToContainerPoint(toLL(0, 0));
+    const targetCenterPx = map.project(e.center, z);
+    const toOrigin = size.divideBy(2).subtract(targetCenterPx);
+    zoomFrom = { scale: scaleAt(map.getZoom()), origin: fromOrigin };
+    zoomTo = { scale: k, origin: toOrigin };
     startZoomPaint();
   }
 
