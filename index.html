@@ -20,6 +20,7 @@
   --header-bg:#151a2bf2;
   --radius:5px;
   --h:56px;
+  --panel-w:400px;    /* 关卡面板宽度；JS 用它算视口中心，改这里即可 */
   --g-hub:#d7dbe6;
   --g-north:#ef6a5b;
   --g-east:#7fb2ff;
@@ -231,7 +232,7 @@ body.en .alab.major{font-size:12.5px;letter-spacing:0;}
 
 /* ---------- panel ---------- */
 #panel{
-  position:fixed;top:calc(var(--h) + 10px);right:10px;bottom:10px;width:400px;z-index:45;
+  position:fixed;top:calc(var(--h) + 10px);right:10px;bottom:10px;width:var(--panel-w);z-index:45;
   background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
   display:flex;flex-direction:column;overflow:hidden;
   transform:translateX(calc(100% + 20px));transition:transform .28s cubic-bezier(.3,.8,.3,1);
@@ -1460,19 +1461,29 @@ details.alt[open]>summary{margin-bottom:8px;}
     applyView();
   }
 
+  // 把某个源图坐标移到「可视区中心」并设定缩放。
+  //
+  // 关卡面板会盖住右侧约 210px，所以真正的可视中心比屏幕中心偏左 105px。
+  // 这里直接算出带偏移的最终中心，一次性做动画 ——
+  // 之前是「先 setView 到几何中心，等动画结束再 panBy 补偏移」，
+  // 两段动画接在一起，看起来就是平滑移动之后突然跳一下。
   function centerOn(px, py, z){
     const targetZ = z != null ? z : Math.max(map.getZoom(), 2);
-    map.setView(toLL(px, py), targetZ, { animate: true, duration: 0.45 });
-    // 面板占了右侧一部分，把中心点往左挪，让选中的关卡落在可视区中央
-    setTimeout(syncPanelOffset, 460);
-  }
+    // 面板宽度取自 CSS 变量，不读 DOM 尺寸：
+    // 刚 render() 完面板可能还没完成布局，offsetWidth / getBoundingClientRect
+    // 都会返回 0 或动画中途的宽度，算出来的偏移就不准。
+    const panelW = panel.classList.contains("open") && stage.clientWidth > 820
+      ? parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--panel-w")) || 400
+      : 0;
+    const shift = panelW / 2;                       // 可视中心相对屏幕中心左移的像素
 
-  // 侧栏/面板展开时，把地图中心往左偏，避免被面板盖住
-  // 关卡面板展开时占住右侧一部分，把地图中心往左让，避免选中的关卡被面板盖住。
-  function syncPanelOffset(){
-    if (!map) return;
-    const panelOpen = panel.classList.contains("open") && stage.clientWidth > 820;
-    if (panelOpen) map.panBy([105, 0], { animate: false });
+    // 目标：让这一点落在「可视区中心」而非「屏幕中心」。
+    // 可视区中心在屏幕中心左侧 shift 像素，所以视口中心要往右移同样的距离
+    // （视口中心右移 = 内容左移 = 目标点在屏幕上左移）。
+    const centerPx = map.project(toLL(px, py), targetZ);
+    const target = map.unproject(centerPx.add([shift, 0]), targetZ);
+
+    map.setView(target, targetZ, { animate: true, duration: 0.45 });
   }
 
   // 标记与地名都挂在 overlayPane 里（随 mapPane 一起平移），
@@ -1948,7 +1959,7 @@ details.alt[open]>summary{margin-bottom:8px;}
   document.addEventListener("keydown", e => { if (e.key === "Escape") openAbout(false); });
 
   /* ---------- 关于：数据来源 · 版本记录 ---------- */
-  const VERSION = "0.12.6";
+  const VERSION = "0.12.7";
   const VERSION_DATE = "2026-11-19";
 
   function colophonHTML(){
@@ -2132,6 +2143,8 @@ details.alt[open]>summary{margin-bottom:8px;}
       <li>Leaflet 1.9.4 已本地化到 <code>assets/vendor/</code>，不依赖外部 CDN（jsdelivr 在国内不可达）</li>
       <li>标记、地名、进度、搜索、URL 定位、导入导出等原有功能全部保留</li>
       <li>瓦片由 <code>tools/make-tiles.py</code> 生成，改底图后重跑即可</li>
+      <li>修：<b>点击标点后地图会跳一下</b> —— 原来是「先平滑移到几何中心，动画结束再瞬时补偏移」
+        两段拼接；现改为一次性算出带面板偏移的最终中心，单次动画到位</li>
       <li>清理：删除手写地图引擎的残留 —— 未使用的 <code>ACTS</code>、<code>fromLL</code>，
         <code>syncPanelOffset</code> 里恒为 0 的死变量，<code>#stage</code> 上已被 Leaflet
         接管的光标/拖拽样式，以及若干描述旧方案的过时注释</li>
