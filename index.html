@@ -1861,8 +1861,30 @@ details.alt[open]>summary{margin-bottom:8px;}
   // 语言切换：中英互切，记住选择
   document.getElementById("btnLang").onclick = () => setLang(isEN() ? "zh" : "en");
 
+  // 窗口尺寸变化：保持当前缩放与中心，只同步画布尺寸。
+  // 不能调 fit() —— 那是「重置为初始视图」，会把用户缩放的级别强行拉回最低。
   let rt = null;
-  window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(fit, 150); });
+  window.addEventListener("resize", () => {
+    clearTimeout(rt);
+    rt = setTimeout(() => {
+      if (!map) return;
+      // 记下原视图：invalidateSize 在 maxBounds 生效时会把中心推回边界内
+      // （实测 z0 时偏了 12.5 单位），那是我们不想发生的变化。
+      const keep = { center: map.getCenter(), zoom: map.getZoom() };
+      map.invalidateSize({ animate: false, pan: false });
+      map.setView(keep.center, keep.zoom, { animate: false });
+      // 真正需要钳制的只有一种情况：内容比视口大、且中心被拖出了边界。
+      // 内容比视口小（如 z0 的 256px 整图）时全图都看得见，不该动它。
+      const shown = 256 * Math.pow(2, keep.zoom);
+      const sz = map.getSize();
+      if (shown > sz.x || shown > sz.y){
+        map.panInsideBounds(map.options.maxBounds || bounds, { animate: false });
+      }
+      positionMkLayer();
+      positionLbLayer();
+      applyView();
+    }, 120);
+  });
 
   /* ---------- 点标记选关 / 悬停提示 ----------
      标记画在 canvas 上，没有 DOM 可绑定，改用坐标命中检测。
@@ -2340,6 +2362,9 @@ details.alt[open]>summary{margin-bottom:8px;}
         现在一次绘制完成，重绘耗时 1ms 以内</li>
       <li>点击与悬停改为坐标命中检测，区分拖动与点击（位移 &lt;4px 才算点击）；
         缩放动画按 <b>190ms</b> 缓动逐帧插值，标点与底图同步缩放</li>
+      <li>修：<b>改变窗口大小会把缩放强行拉回最低级</b> —— <code>resize</code> 事件直接绑了
+        <code>fit()</code>，而 <code>fit</code> 是「重置为初始视图」，每次改窗口都重新算层级并
+        <code>setView</code>。现改为只同步画布尺寸、保持当前缩放与中心</li>
       <li>修：z0 层级瓦片原为 1024px，但 Leaflet 按 <code>tileSize=256</code> 排版，
         实际被压缩显示 —— 多下载 140KB 却看不出区别。现统一为 256×256，
         z0 体积 168KB → <b>25KB</b></li>
